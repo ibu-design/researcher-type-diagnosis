@@ -1,0 +1,83 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+
+const root = path.resolve(__dirname, "..");
+const context = vm.createContext({});
+vm.runInContext(fs.readFileSync(path.join(root, "script.js"), "utf8"), context);
+const calculate = vm.runInContext("calculateResult", context);
+const types = vm.runInContext("researcherTypes", context);
+
+test("Q2 is reversed; the three axes have independent scores", () => {
+  const result = calculate([1, 6, 1, 1, 1, 1, 6, 6, 6]);
+  assert.equal(result.typeCode, "IPA");
+  assert.deepEqual({ ...result.scores }, { IC: 3, PE: 3, FA: 18 });
+  assert.equal(calculate([6, 1, 6, 6, 6, 6, 1, 1, 1]).typeCode, "CEF");
+});
+
+test("scores 10 and 11 fall on opposite sides of every boundary", () => {
+  const low = calculate([3, 4, 4, 3, 3, 4, 3, 3, 4]);
+  const high = calculate([3, 3, 4, 3, 3, 5, 3, 3, 5]);
+  assert.deepEqual({ ...low.scores }, { IC: 10, PE: 10, FA: 10 });
+  assert.deepEqual({ ...high.scores }, { IC: 11, PE: 11, FA: 11 });
+  assert.equal(low.typeCode, "IPF");
+  assert.equal(high.typeCode, "CEA");
+});
+
+test("all 216 triples per axis follow the specified threshold", () => {
+  for (let a = 1; a <= 6; a += 1) {
+    for (let b = 1; b <= 6; b += 1) {
+      for (let c = 1; c <= 6; c += 1) {
+        const individual = calculate([a, b, c, 1, 1, 1, 1, 1, 1]);
+        const planning = calculate([1, 6, 1, a, b, c, 1, 1, 1]);
+        const application = calculate([1, 6, 1, 1, 1, 1, a, b, c]);
+        assert.equal(individual.typeCode, (a + 7 - b + c < 10.5 ? "I" : "C") + "PF");
+        assert.equal(planning.typeCode, "I" + (a + b + c < 10.5 ? "P" : "E") + "F");
+        assert.equal(application.typeCode, "IP" + (a + b + c < 10.5 ? "F" : "A"));
+      }
+    }
+  }
+});
+
+test("all eight results map to the specified animals and existing PNGs", () => {
+  const expected = {
+    IPF: "フクロウ", IPA: "キツツキ", IEF: "タコ", IEA: "アライグマ",
+    CPF: "ゾウ", CPA: "ビーバー", CEF: "イルカ", CEA: "カワウソ"
+  };
+  assert.deepEqual(Object.keys(types).sort(), Object.keys(expected).sort());
+  for (const [code, animal] of Object.entries(expected)) {
+    const answers = [
+      ...(code[0] === "I" ? [1, 6, 1] : [6, 1, 6]),
+      ...Array(3).fill(code[1] === "P" ? 1 : 6),
+      ...Array(3).fill(code[2] === "F" ? 1 : 6)
+    ];
+    assert.equal(calculate(answers).typeCode, code);
+    assert.equal(types[code].animalName, animal);
+    assert.equal(types[code].typeCode, code);
+    assert.equal(types[code].axis1 + types[code].axis2 + types[code].axis3, code);
+    assert.equal(types[code].imagePath, "assets/images/" + animal + ".png");
+    const png = fs.readFileSync(path.join(root, types[code].imagePath));
+    assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  }
+});
+
+test("incomplete, sparse, fractional and out-of-range answers are rejected", () => {
+  for (const answers of [null, [], Array(8).fill(1), Array(10).fill(1), Array(9)]) {
+    assert.throws(() => calculate(answers), { name: "RangeError" });
+  }
+  for (let index = 0; index < 9; index += 1) {
+    for (const invalid of [null, undefined, 0, 7, 1.5, NaN, Infinity, "3"]) {
+      const answers = Array(9).fill(1);
+      answers[index] = invalid;
+      assert.throws(() => calculate(answers), { name: "RangeError" });
+    }
+  }
+});
+
+test("scoring leaves the supplied answers unchanged", () => {
+  const answers = Object.freeze([3, 4, 4, 3, 3, 4, 3, 3, 4]);
+  calculate(answers);
+  assert.deepEqual(answers, [3, 4, 4, 3, 3, 4, 3, 3, 4]);
+});

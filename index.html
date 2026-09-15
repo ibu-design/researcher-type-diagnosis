@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="9つの質問から，あなたの研究スタイルを診断します。大学イベントのための研究者タイプ診断です。" />
+    <meta name="theme-color" content="#2f7d73" />
+    <title>研究者タイプ診断</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">本文へ</a>
+    <header class="site-header">
+      <span class="site-name">研究者タイプ診断</span>
+      <span class="header-note">全9問</span>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <section id="start-screen" class="start-screen" aria-labelledby="site-title">
+        <div class="start-intro">
+          <p class="eyebrow">あなたの研究スタイルは？</p>
+          <h1 id="site-title" tabindex="-1"><span>研究者タイプ</span><span>診断</span></h1>
+          <p class="lead"><span>9つの質問から，</span><span>あなたの研究スタイルを診断します</span></p>
+        </div>
+        <div id="character-gallery" class="character-gallery" aria-label="8タイプのキャラクター"></div>
+        <div class="start-actions">
+          <button class="primary-button" type="button" id="start-button" disabled>診断をはじめる</button>
+          <p class="quiet-note">研究能力や適性を評価するものではありません。</p>
+        </div>
+        <noscript><p class="notice">診断にはJavaScriptが必要です。ブラウザの設定で有効にしてください。</p></noscript>
+      </section>
+      <section id="question-screen" class="question-screen" aria-labelledby="question-title" hidden>
+        <div class="question-progress">
+          <div class="progress-label"><span>質問</span><span id="question-count">1 / 9</span></div>
+          <progress id="question-progress" max="9" value="1" aria-label="質問の進捗"></progress>
+        </div>
+        <h2 id="question-title" class="question-title" tabindex="-1"></h2>
+        <dl id="question-comparison" class="question-comparison" hidden>
+          <div class="comparison-item"><dt>A</dt><dd id="statement-a"></dd></div>
+          <div class="comparison-item"><dt>B</dt><dd id="statement-b"></dd></div>
+        </dl>
+        <form id="question-form">
+          <fieldset class="answer-fieldset" aria-labelledby="question-title" aria-describedby="question-comparison">
+            <legend class="visually-hidden">回答を選択</legend>
+            <div id="answer-options" class="answer-options"></div>
+          </fieldset>
+          <p id="answer-error" class="answer-error" role="alert" hidden>回答を選択してください。</p>
+          <div class="question-navigation">
+            <button type="button" id="back-button" class="secondary-button">戻る</button>
+            <button type="submit" id="next-button" class="primary-button" disabled>次へ</button>
+          </div>
+        </form>
+      </section>
+      <section id="result-screen" class="result-screen" aria-labelledby="result-title" hidden>
+        <div class="result-heading">
+          <p class="eyebrow">あなたの研究者タイプ</p>
+          <p id="result-code" class="result-code"></p>
+          <h2 id="result-title" tabindex="-1"></h2>
+        </div>
+        <div class="result-body">
+          <div class="result-portrait"><img id="result-image" alt="" width="480" height="560" /></div>
+          <div class="result-details">
+            <p id="result-catch" class="result-catch" hidden></p>
+            <p id="result-description" class="result-description"></p>
+            <dl id="result-axes" class="result-axes" aria-label="3軸の判定結果"></dl>
+            <button type="button" id="restart-button" class="secondary-button">もう一度診断する</button>
+          </div>
+        </div>
+        <section class="venue-section" aria-labelledby="venue-title">
+          <div class="venue-inner">
+            <p class="eyebrow">会場でもっと楽しもう</p>
+            <h3 id="venue-title">詳しい結果は、会場で。</h3>
+            <p>ここでは、あなたのタイプを簡単にご紹介しています。診断結果の詳しい内容は、会場でチェック！</p>
+            <p>共通デザインのオリジナルファイルと、あなたのタイプのステッカーを会場でお渡しします。</p>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <button class="text-button" type="button" data-about="about-title" disabled>本診断について</button>
+      <span class="footer-divider" aria-hidden="true"></span>
+      <button class="text-button" type="button" data-about="references-title" disabled>診断の根拠</button>
+    </footer>
+    <dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title">
+      <div class="dialog-toolbar">
+        <span>本診断について</span>
+        <form method="dialog"><button class="secondary-button close-button" autofocus>閉じる</button></form>
+      </div>
+      <div class="about-content">
+        <h2 id="about-title" tabindex="-1">本診断について</h2>
+        <p>本診断は，研究活動や個人の行動傾向に関する先行研究を参考に，本イベントのために独自に作成した研究者タイプ診断です。質問項目およびタイプの分類方法は，既存の尺度や理論を参考に独自に構成しており，既存の心理尺度をそのまま使用したものではありません。</p>
+        <p>各質問への回答には，中立の選択肢を設けない6件法による評定を採用しています。診断結果は，研究スタイルの傾向を楽しみながら考えるためのものであり，研究能力や研究者としての適性を評価するものではありません。</p>
+        <h3>3つの軸</h3>
+        <dl id="about-axes" class="about-axes"></dl>
+        <h3>判定方法</h3>
+        <p>各軸3問の合計得点で判定します。第1軸のQ2のみ「7 − 回答値」に逆転します。各軸の合計が3〜10点の場合はI・P・F，11〜18点の場合はC・E・Aです。</p>
+        <h3>キャラクターについて</h3>
+        <p>実際の動物の特徴・習性を参考に，イベント用のキャラクターとして各研究スタイルに対応づけています。動物の習性と研究スタイルが科学的に完全一致するという意味ではありません。</p>
+        <h3>回答の取り扱い</h3>
+        <p>回答と診断処理は，このブラウザ内で完結します。回答は外部に送信せず，ページの再読み込みや終了で消えます。</p>
+        <section aria-labelledby="references-title">
+          <h3 id="references-title" tabindex="-1">診断の根拠・参考文献</h3>
+          <p>以下の先行研究の尺度や概念を参考にしています。一部の書誌情報は確認中です。</p>
+          <ul id="reference-list" class="reference-list"></ul>
+        </section>
+      </div>
+    </dialog>
+  </body>
+</html>
