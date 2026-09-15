@@ -130,6 +130,58 @@ main {
   text-align: center;
 }
 
+.event-festival {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.event-catch {
+  margin: 4px 0 20px;
+  color: var(--color-accent-dark);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.event-catch span {
+  display: inline-block;
+}
+
+.event-affiliation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 640px;
+  margin: 28px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-line);
+}
+
+.program-logo {
+  flex: none;
+  width: 128px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.event-affiliation p {
+  min-width: 0;
+  max-width: 440px;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  line-height: 1.9;
+}
+
+.event-affiliation a {
+  color: var(--color-accent-dark);
+  text-underline-offset: 4px;
+}
+
+.event-affiliation a:hover {
+  text-decoration-thickness: 2px;
+}
+
 .eyebrow {
   margin-bottom: 12px;
   color: var(--color-accent-dark);
@@ -710,6 +762,17 @@ input:checked ~ .answer-state {
 
   .start-screen {
     padding-top: 48px;
+  }
+
+  .event-catch {
+    font-size: 1.25rem;
+  }
+
+  .event-affiliation {
+    flex-direction: row;
+    gap: 28px;
+    margin-top: 36px;
+    text-align: left;
   }
 
   h1 {
