@@ -68,6 +68,7 @@
             <p id="result-catch" class="result-catch" hidden></p>
             <p id="result-description" class="result-description"></p>
             <dl id="result-axes" class="result-axes" aria-label="3軸の判定結果"></dl>
+            <p class="percentage-note">割合は回答得点から換算した傾向の目安です。能力や適性，診断の確率を表すものではありません。</p>
             <button type="button" id="restart-button" class="secondary-button">もう一度診断する</button>
           </div>
         </div>
@@ -85,6 +86,7 @@
       <button class="text-button" type="button" data-about="about-title" disabled>本診断について</button>
       <span class="footer-divider" aria-hidden="true"></span>
       <button class="text-button" type="button" data-about="references-title" disabled>診断の根拠</button>
+      <p class="ai-credit">キャラクターイラストはAdobeの生成AIツールを使用して作成しています。</p>
     </footer>
     <dialog id="about-dialog" class="about-dialog" aria-labelledby="about-title">
       <div class="dialog-toolbar">
@@ -99,8 +101,12 @@
         <dl id="about-axes" class="about-axes"></dl>
         <h3>判定方法</h3>
         <p>各軸3問の合計得点で判定します。第1軸のQ2のみ「7 − 回答値」に逆転します。各軸の合計が3〜10点の場合はI・P・F，11〜18点の場合はC・E・Aです。</p>
+        <h3>割合の見方</h3>
+        <p>各軸の合計得点（3〜18点）を0〜100%に換算しています。C・E・A側の割合は「（合計得点 − 3）÷ 15 × 100」を四捨五入した値，I・P・F側は残りの割合です。例えば10点ならI・P・F側が53%，11点ならC・E・A側が53%になります。</p>
+        <p>割合は今回の回答に基づく傾向の目安です。他の参加者との比較，能力・適性の高さ，診断の正しさの確率を示すものではありません。</p>
         <h3>キャラクターについて</h3>
         <p>実際の動物の特徴・習性を参考に，イベント用のキャラクターとして各研究スタイルに対応づけています。動物の習性と研究スタイルが科学的に完全一致するという意味ではありません。</p>
+        <p>掲載している8種類の動物キャラクターのイラストは，Adobeの生成AIツールを使用して作成しています。</p>
         <h3>回答の取り扱い</h3>
         <p>回答と診断処理は，このブラウザ内で完結します。回答は外部に送信せず，ページの再読み込みや終了で消えます。</p>
         <section aria-labelledby="references-title">

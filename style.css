@@ -534,7 +534,7 @@ input:checked ~ .answer-state {
 .result-axes {
   display: grid;
   gap: 16px;
-  margin: 24px 0;
+  margin: 24px 0 16px;
 }
 
 .axis-label {
@@ -550,12 +550,12 @@ input:checked ~ .answer-state {
 }
 
 .axis-pole {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   min-height: 44px;
-  padding: 8px 10px;
+  padding: 8px;
   background: #f5f6f5;
   border: 1px solid transparent;
   color: var(--color-muted);
@@ -573,9 +573,47 @@ input:checked ~ .answer-state {
   font-size: 0.875rem;
 }
 
-.axis-indicator {
-  margin-left: auto;
-  font-size: 0.625rem;
+.axis-percent {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.axis-bar {
+  position: relative;
+  display: flex;
+  height: 8px;
+  margin-top: 8px;
+  overflow: hidden;
+  background: var(--color-line);
+}
+
+.axis-bar::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: white;
+  transform: translateX(-50%);
+}
+
+.axis-segment {
+  flex: none;
+  height: 100%;
+  background: #d9e2df;
+}
+
+.axis-segment.is-selected {
+  background: var(--color-accent);
+}
+
+.percentage-note {
+  margin-bottom: 24px;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  line-height: 1.8;
 }
 
 .result-details > button {
@@ -633,6 +671,15 @@ input:checked ~ .answer-state {
   font-size: 0.8125rem;
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+.ai-credit {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  text-align: center;
 }
 
 .text-button:hover {

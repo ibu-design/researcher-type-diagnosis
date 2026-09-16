@@ -178,7 +178,15 @@ function calculateResult(answers) {
   const typeCode = Object.entries(axes)
     .map(([key, axis]) => axis.poles[scores[key] <= 10 ? 0 : 1])
     .join("");
-  return { typeCode, scores };
+  // 各軸の得点範囲3〜18を百分率に換算。丸めた後も両側の合計を100%にする。
+  const percentages = Object.fromEntries(Object.entries(axes).map(([key, axis]) => {
+    const rightPercent = Math.round(((scores[key] - 3) / 15) * 100);
+    return [key, {
+      [axis.poles[0]]: 100 - rightPercent,
+      [axis.poles[1]]: rightPercent
+    }];
+  }));
+  return { typeCode, scores, percentages };
 }
 
 function initializeApp() {
@@ -245,20 +253,30 @@ function initializeApp() {
     byId("result-description").textContent = type.description || "";
     byId("result-catch").textContent = type.shortCatch || "";
     byId("result-catch").hidden = !type.shortCatch;
-    const rows = Object.values(axes).map((axis, index) => {
+    const rows = Object.entries(axes).map(([key, axis], index) => {
       const selectedPole = type["axis" + (index + 1)];
       const row = element("div", "axis-row");
       row.append(element("dt", "axis-label", axis.label));
-      const values = element("dd", "axis-poles");
+      const values = element("dd", "axis-values");
+      const poles = element("div", "axis-poles");
       axis.poles.forEach((pole) => {
         const selected = pole === selectedPole;
         const name = element("span", "axis-pole" + (selected ? " is-selected" : ""));
         const code = element("b", "axis-code", pole);
         code.setAttribute("aria-hidden", "true");
         name.append(code, element("span", "", axis.names[pole]));
-        name.append(element("span", "axis-indicator", selected ? "該当" : ""));
-        values.append(name);
+        name.append(element("b", "axis-percent", result.percentages[key][pole] + "%"));
+        if (selected) name.append(element("span", "visually-hidden", "寄り"));
+        poles.append(name);
       });
+      const bar = element("div", "axis-bar");
+      bar.setAttribute("aria-hidden", "true");
+      axis.poles.forEach((pole) => {
+        const segment = element("span", "axis-segment" + (pole === selectedPole ? " is-selected" : ""));
+        segment.style.width = result.percentages[key][pole] + "%";
+        bar.append(segment);
+      });
+      values.append(poles, bar);
       row.append(values);
       return row;
     });

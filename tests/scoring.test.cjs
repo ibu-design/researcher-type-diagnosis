@@ -24,6 +24,32 @@ test("scores 10 and 11 fall on opposite sides of every boundary", () => {
   assert.deepEqual({ ...high.scores }, { IC: 11, PE: 11, FA: 11 });
   assert.equal(low.typeCode, "IPF");
   assert.equal(high.typeCode, "CEA");
+  assert.deepEqual({ ...low.percentages.IC }, { I: 53, C: 47 });
+  assert.deepEqual({ ...low.percentages.PE }, { P: 53, E: 47 });
+  assert.deepEqual({ ...low.percentages.FA }, { F: 53, A: 47 });
+  assert.deepEqual({ ...high.percentages.IC }, { I: 47, C: 53 });
+  assert.deepEqual({ ...high.percentages.PE }, { P: 47, E: 53 });
+  assert.deepEqual({ ...high.percentages.FA }, { F: 47, A: 53 });
+});
+
+test("percentages map the score range to 0-100 and sum to 100", () => {
+  const expectedRight = [0, 7, 13, 20, 27, 33, 40, 47, 53, 60, 67, 73, 80, 87, 93, 100];
+  for (let score = 3; score <= 18; score += 1) {
+    let remaining = score - 3;
+    const triple = [1, 1, 1].map(() => {
+      const increment = Math.min(remaining, 5);
+      remaining -= increment;
+      return 1 + increment;
+    });
+    const result = calculate([triple[0], 7 - triple[1], triple[2], ...triple, ...triple]);
+    for (const [key, left, right] of [["IC", "I", "C"], ["PE", "P", "E"], ["FA", "F", "A"]]) {
+      assert.equal(result.percentages[key][right], expectedRight[score - 3]);
+      assert.equal(result.percentages[key][left] + result.percentages[key][right], 100);
+      const selected = score <= 10 ? left : right;
+      assert.ok(result.percentages[key][selected] > 50);
+      assert.ok(result.typeCode.includes(selected));
+    }
+  }
 });
 
 test("all 216 triples per axis follow the specified threshold", () => {
