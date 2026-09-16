@@ -96,10 +96,9 @@ function client(initial = null, deny = false) {
   const make = endpoint => window.createDiagnosisCollector(endpoint,storage,s=>statuses.push(plain(s)));
   function ready(frame = frames.at(-1)) {
     const request = new URL(frame.src);
-    const callbackName = request.searchParams.get('callback');
     const payload = JSON.parse(request.searchParams.get('record'));
     return {payload, ack: (ok=true,code) => {
-      window[callbackName]({ok,code,revision:payload.revision});
+      if (ok) frame.onload(); else frame.onerror();
     }};
   }
   return {make,frames,statuses,ready,map,timers};
@@ -117,7 +116,7 @@ test('unconfigured or untrusted endpoint never sends data', () => {
   assert.equal(c.frames.length,0);
 });
 
-test('client sends minimum fields, waits for acknowledgement, changes and restores intent', async () => {
+test('client sends minimum fields, waits for load acknowledgement, changes and restores intent', async () => {
   const c = client();
   const app = c.make(url);
   app.result('IPF',true);

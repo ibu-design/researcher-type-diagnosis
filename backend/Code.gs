@@ -26,16 +26,15 @@ function setupStorage() {
 
 function doGet(event) {
   const params = event && event.parameter || {};
-  const callback = params.callback;
-  if (typeof callback === "string" && /^__researcherDiagnosisSave_[0-9a-f]{64}$/.test(callback)) {
+  if (typeof params.record === "string") {
     let result;
     try {
       result = saveResponse(JSON.parse(params.record || ""));
     } catch (error) {
       result = { ok: false, code: "invalid" };
     }
-    return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ");")
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    const title = result.ok === true ? "saved" : "not-saved";
+    return HtmlService.createHtmlOutput('<!doctype html><html><head><meta charset="utf-8"><title>' + title + '</title></head><body></body></html>');
   }
   return HtmlService.createHtmlOutput("保存受付用のページです。診断サイトからご利用ください。");
 }

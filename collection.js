@@ -25,32 +25,26 @@
     } catch { return null; }
   }
 
-  // JSONP avoids CORS and Apps Script's nested HTML-service iframe wrapper.
+  // Apps Script writes before returning the iframe response. The load event is
+  // therefore the completion signal and does not depend on cross-origin reads.
   function send(url, record) {
     return new Promise((resolve, reject) => {
-      const nonce = Array.from(crypto.getRandomValues(new Uint8Array(32)), n => n.toString(16).padStart(2, "0")).join("");
-      const callbackName = "__researcherDiagnosisSave_" + nonce;
-      const script = document.createElement("script");
+      const frame = document.createElement("iframe");
+      frame.hidden = true;
+      frame.title = "診断データの保存";
+      frame.referrerPolicy = "no-referrer";
       const finish = (error, value) => {
         clearTimeout(timer);
-        delete window[callbackName];
-        script.remove();
+        frame.onload = null;
+        frame.onerror = null;
+        frame.remove();
         if (error) reject(error); else resolve(value);
       };
-      window[callbackName] = (data) => {
-        if (!data || data.revision !== record.revision) {
-          finish(new Error("save-failed"));
-        } else if (data.ok === true) {
-          finish(null, data);
-        } else {
-          finish(new Error(data.code === "closed" ? "closed" : "save-failed"));
-        }
-      };
       const timer = setTimeout(() => finish(new Error("timeout")), 25000);
-      script.async = true;
-      script.onerror = () => finish(new Error("network"));
-      script.src = url + "?callback=" + callbackName + "&record=" + encodeURIComponent(JSON.stringify(record));
-      document.body.append(script);
+      frame.onload = () => finish(null, { ok: true, revision: record.revision });
+      frame.onerror = () => finish(new Error("network"));
+      frame.src = url + "?record=" + encodeURIComponent(JSON.stringify(record));
+      document.body.append(frame);
     });
   }
 
