@@ -1,6 +1,5 @@
 "use strict";
 
-const SITE_ORIGIN = "https://ibu-design.github.io";
 const SHEET_NAME = "responses";
 const TYPE_CODES = ["IPF", "IPA", "IEF", "IEA", "CPF", "CPA", "CEF", "CEA"];
 
@@ -26,29 +25,19 @@ function setupStorage() {
 }
 
 function doGet(event) {
-  const channel = event && event.parameter && event.parameter.channel;
-  if (typeof channel !== "string" || !/^[0-9a-f]{64}$/.test(channel)) {
-    return HtmlService.createHtmlOutput("保存受付用のページです。診断サイトからご利用ください。");
+  const params = event && event.parameter || {};
+  const callback = params.callback;
+  if (typeof callback === "string" && /^__researcherDiagnosisSave_[0-9a-f]{64}$/.test(callback)) {
+    let result;
+    try {
+      result = saveResponse(JSON.parse(params.record || ""));
+    } catch (error) {
+      result = { ok: false, code: "invalid" };
+    }
+    return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ");")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
-  const script = "(" + bridge_.toString() + ")(" + JSON.stringify(channel) + "," + JSON.stringify(SITE_ORIGIN) + ");";
-  return HtmlService.createHtmlOutput("<!doctype html><html><head><meta charset=\"utf-8\"></head><body><script>" + script + "</script></body></html>")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-}
-
-function bridge_(channel, origin) {
-  let started = false;
-  window.addEventListener("message", function (event) {
-    if (event.origin !== origin || event.source !== window.top || started ||
-        !event.data || event.data.channel !== channel || event.data.kind !== "save") return;
-    started = true;
-    google.script.run.withSuccessHandler(function (result) {
-      window.top.postMessage({ kind: "saved", channel: channel, ok: result.ok,
-        revision: result.revision, code: result.code }, origin);
-    }).withFailureHandler(function () {
-      window.top.postMessage({ kind: "saved", channel: channel, ok: false }, origin);
-    }).saveResponse(event.data.record);
-  });
-  window.top.postMessage({ kind: "ready", channel: channel }, origin);
+  return HtmlService.createHtmlOutput("保存受付用のページです。診断サイトからご利用ください。");
 }
 
 function validRecord_(record) {

@@ -29,7 +29,7 @@ GitHubのリポジトリ設定で、Pagesの公開元を `Deploy from a branch`�
 - `assets/images/`：提供された8タイプのPNGとHWIPロゴ（`logo.png`）。ファイル名・画像はそのまま使用。
 - `tests/scoring.test.cjs`：採点の境界値、逆転項目、8タイプと画像の対応などの検証。
 - `tests/storage.test.cjs`：結果保存・復元、破損データ、保存拒否・容量不足、削除範囲の検証。
-- `tests/collection.test.cjs`：保存入力の検証、重複防止、更新順序、再送・送信元検証。
+- `tests/collection.test.cjs`：保存入力の検証、重複防止、更新順序、再送・JSONP応答の検証。
 
 ## 編集する場所
 
@@ -98,7 +98,7 @@ Bledowらの論文では計画と試行錯誤は相補的な過程、Bentleyら�
 
 集計用ID・タイプ・参加意向・送信状態は `researcher-type-diagnosis:collection` に保存します。「保存結果を削除」は端末内の結果表示だけを削除し、集計用データや送信済みの行は削除しません。旧版で保存した結果は、再訪だけで初回送信しません。ブラウザに送信状態を保存できない場合は重複を避けるため送信しません。
 
-通信はApps Scriptの埋め込みページと `google.script.run` を使い、書き込み完了の応答を受け取ってから保存済みと表示します。送信元・ランダムな通信識別子を検証し、25秒以内に確認できなければ再試行を案内します。失敗しても診断結果は利用できます。`no-cors` の送信だけで成功扱いにはしません。
+通信はApps ScriptのJSONP応答を使い、書き込み完了の応答を受け取ってから保存済みと表示します。ランダムなコールバック名とレコード内容を検証し、25秒以内に確認できなければ再試行を案内します。送信するのはランダムID・タイプ・参加意向・更新番号だけで、個人情報は含めません。失敗しても診断結果は利用できます。
 
 ### 初期設定
 
@@ -114,7 +114,7 @@ Bledowらの論文では計画と試行錯誤は相補的な過程、Bentleyら�
 
 Apps Scriptのスクリプトプロパティ `ACCEPTING` を `false` にすると新規保存・更新を停止できます。イベント終了後に非公開のバックアップを取得し、必要な保管期間を主催者が決めてデータを削除してください。自動削除や定期集計のトリガーは作成しません。サイトだけ更新してもApps Scriptのデプロイ版は変わらないため、受付コードの変更時は新しいバージョンをデプロイしてください。
 
-[Apps ScriptのWebアプリ](https://developers.google.com/apps-script/guides/web)・[HTMLとサーバーの通信](https://developers.google.com/apps-script/guides/html/communication)・[利用上限](https://developers.google.com/apps-script/guides/services/quotas)
+[Apps ScriptのWebアプリ](https://developers.google.com/apps-script/guides/web)・[Content Service](https://developers.google.com/apps-script/guides/content)・[利用上限](https://developers.google.com/apps-script/guides/services/quotas)
 
 ## キャラクター画像のAI表記
 

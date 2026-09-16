@@ -81,13 +81,9 @@ test('server handles closure and lock contention, always releases its acquired l
 function client(initial = null, deny = false) {
   const map = new Map(initial ? [['researcher-type-diagnosis:collection', JSON.stringify(initial)]] : []);
   const frames = [];
-  const listeners = new Set();
   const timers = new Set();
   const statuses = [];
-  const window = {
-    addEventListener: (name, fn) => listeners.add(fn),
-    removeEventListener: (name, fn) => listeners.delete(fn)
-  };
+  const window = {};
   const storage = {
     getItem: key => map.get(key) || null,
     setItem: (key, value) => { if (deny) throw Error('denied'); map.set(key,value); }
@@ -98,13 +94,12 @@ function client(initial = null, deny = false) {
   });
   vm.runInContext(source,context);
   const make = endpoint => window.createDiagnosisCollector(endpoint,storage,s=>statuses.push(plain(s)));
-  function ready(frame = frames.at(-1), origin = 'https://test-script.googleusercontent.com') {
-    const channel = new URL(frame.src).searchParams.get('channel');
-    let payload;
-    const peer = {postMessage: data => {payload=plain(data.record);}};
-    for (const fn of listeners) fn({origin,source:peer,data:{kind:'ready',channel}});
+  function ready(frame = frames.at(-1)) {
+    const request = new URL(frame.src);
+    const callbackName = request.searchParams.get('callback');
+    const payload = JSON.parse(request.searchParams.get('record'));
     return {payload, ack: (ok=true,code) => {
-      for (const fn of [...listeners]) fn({origin,source:peer,data:{kind:'saved',channel,ok,code,revision:payload?.revision}});
+      window[callbackName]({ok,code,revision:payload.revision});
     }};
   }
   return {make,frames,statuses,ready,map,timers};
@@ -122,19 +117,18 @@ test('unconfigured or untrusted endpoint never sends data', () => {
   assert.equal(c.frames.length,0);
 });
 
-test('client sends minimum fields, ignores spoofed origin, waits for acknowledgement, changes and restores intent', async () => {
+test('client sends minimum fields, waits for acknowledgement, changes and restores intent', async () => {
   const c = client();
   const app = c.make(url);
   app.result('IPF',true);
   assert.equal(c.statuses.at(-1).busy,true);
-  assert.equal(c.ready(undefined,'https://evil.example').payload,undefined);
-  const first=c.ready(undefined,'https://script.google.com');
+  const first=c.ready();
   assert.deepEqual(Object.keys(first.payload).sort(),['id','intent','revision','typeCode']);
   assert.equal(first.payload.intent,null);
   first.ack(); await tick();
   assert.equal(c.statuses.at(-1).busy,false);
   app.choose('IPF','yes');
-  const second=c.ready(undefined,'https://script.google.com');
+  const second=c.ready();
   assert.equal(second.payload.id,first.payload.id);
   assert.equal(second.payload.revision,2);
   second.ack(); await tick();
@@ -145,7 +139,7 @@ test('client sends minimum fields, ignores spoofed origin, waits for acknowledge
   restored.result('IPF',false);
   assert.equal(c.frames.length,2);
   restored.choose('IPF','no');
-  const third=c.ready(undefined,'https://script.google.com'); third.ack(); await tick();
+  const third=c.ready(); third.ack(); await tick();
   assert.equal(c.statuses.at(-1).intent,'no');
 });
 

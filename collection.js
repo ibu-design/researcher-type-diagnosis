@@ -25,48 +25,32 @@
     } catch { return null; }
   }
 
-  function trustedOrigin(value) {
-    try {
-      const url = new URL(value);
-      return url.protocol === "https:" &&
-        (url.hostname === "script.google.com" || url.hostname === "script.googleusercontent.com" ||
-          url.hostname.endsWith(".googleusercontent.com"));
-    } catch { return false; }
-  }
-
-  // The embedded Google page acknowledges only after the Sheet write has finished.
+  // JSONP avoids CORS and Apps Script's nested HTML-service iframe wrapper.
   function send(url, record) {
     return new Promise((resolve, reject) => {
       const nonce = Array.from(crypto.getRandomValues(new Uint8Array(32)), n => n.toString(16).padStart(2, "0")).join("");
-      const frame = document.createElement("iframe");
-      frame.hidden = true;
-      frame.title = "診断データの保存";
-      frame.referrerPolicy = "no-referrer";
-      let peer = null;
-      let peerOrigin = null;
+      const callbackName = "__researcherDiagnosisSave_" + nonce;
+      const script = document.createElement("script");
       const finish = (error, value) => {
         clearTimeout(timer);
-        window.removeEventListener("message", receive);
-        frame.remove();
+        delete window[callbackName];
+        script.remove();
         if (error) reject(error); else resolve(value);
       };
-      const receive = (event) => {
-        const data = event.data;
-        if (!data || data.channel !== nonce || !event.source ||
-        !trustedOrigin(event.origin)) return;
-        if (data.kind === "ready" && !peer) {
-          peer = event.source;
-          peerOrigin = event.origin;
-          peer.postMessage({ kind: "save", channel: nonce, record }, peerOrigin);
-        } else if (data.kind === "saved" && event.source === peer && event.origin === peerOrigin) {
-          if (data.ok === true && data.revision === record.revision) finish(null, data);
-          else finish(new Error(data.code === "closed" ? "closed" : "save-failed"));
+      window[callbackName] = (data) => {
+        if (!data || data.revision !== record.revision) {
+          finish(new Error("save-failed"));
+        } else if (data.ok === true) {
+          finish(null, data);
+        } else {
+          finish(new Error(data.code === "closed" ? "closed" : "save-failed"));
         }
       };
       const timer = setTimeout(() => finish(new Error("timeout")), 25000);
-      window.addEventListener("message", receive);
-      frame.src = url + "?channel=" + nonce;
-      document.body.append(frame);
+      script.async = true;
+      script.onerror = () => finish(new Error("network"));
+      script.src = url + "?callback=" + callbackName + "&record=" + encodeURIComponent(JSON.stringify(record));
+      document.body.append(script);
     });
   }
 
