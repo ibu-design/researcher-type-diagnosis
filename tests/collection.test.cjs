@@ -128,13 +128,13 @@ test('client sends minimum fields, ignores spoofed origin, waits for acknowledge
   app.result('IPF',true);
   assert.equal(c.statuses.at(-1).busy,true);
   assert.equal(c.ready(undefined,'https://evil.example').payload,undefined);
-  const first=c.ready();
+  const first=c.ready(undefined,'https://script.google.com');
   assert.deepEqual(Object.keys(first.payload).sort(),['id','intent','revision','typeCode']);
   assert.equal(first.payload.intent,null);
   first.ack(); await tick();
   assert.equal(c.statuses.at(-1).busy,false);
   app.choose('IPF','yes');
-  const second=c.ready();
+  const second=c.ready(undefined,'https://script.google.com');
   assert.equal(second.payload.id,first.payload.id);
   assert.equal(second.payload.revision,2);
   second.ack(); await tick();
@@ -145,7 +145,7 @@ test('client sends minimum fields, ignores spoofed origin, waits for acknowledge
   restored.result('IPF',false);
   assert.equal(c.frames.length,2);
   restored.choose('IPF','no');
-  const third=c.ready(); third.ack(); await tick();
+  const third=c.ready(undefined,'https://script.google.com'); third.ack(); await tick();
   assert.equal(c.statuses.at(-1).intent,'no');
 });
 

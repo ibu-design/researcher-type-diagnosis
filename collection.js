@@ -25,6 +25,15 @@
     } catch { return null; }
   }
 
+  function trustedOrigin(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" &&
+        (url.hostname === "script.google.com" || url.hostname === "script.googleusercontent.com" ||
+          url.hostname.endsWith(".googleusercontent.com"));
+    } catch { return false; }
+  }
+
   // The embedded Google page acknowledges only after the Sheet write has finished.
   function send(url, record) {
     return new Promise((resolve, reject) => {
@@ -44,7 +53,7 @@
       const receive = (event) => {
         const data = event.data;
         if (!data || data.channel !== nonce || !event.source ||
-            !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(event.origin)) return;
+        !trustedOrigin(event.origin)) return;
         if (data.kind === "ready" && !peer) {
           peer = event.source;
           peerOrigin = event.origin;
