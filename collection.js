@@ -20,30 +20,41 @@
   function endpoint(value) {
     try {
       const url = new URL(value);
-      return url.origin === "https://script.google.com" && /^\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url.pathname)
-        && !url.search && !url.hash && !url.username && !url.password ? url.href : null;
+      return url.origin === "https://script.google.com" && /^\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url.pathname) &&
+        !url.search && !url.hash && !url.username && !url.password ? url.href : null;
     } catch { return null; }
   }
 
-  // Apps Script writes before returning the iframe response. The load event is
-  // therefore the completion signal and does not depend on cross-origin reads.
   function send(url, record) {
     return new Promise((resolve, reject) => {
       const frame = document.createElement("iframe");
       frame.hidden = true;
       frame.title = "診断データの保存";
       frame.referrerPolicy = "no-referrer";
+      const channel = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, "0")).join("");
+      let receive;
       const finish = (error, value) => {
         clearTimeout(timer);
+        window.removeEventListener("message", receive);
         frame.onload = null;
         frame.onerror = null;
         frame.remove();
         if (error) reject(error); else resolve(value);
       };
       const timer = setTimeout(() => finish(new Error("timeout")), 25000);
-      frame.onload = () => finish(null, { ok: true, revision: record.revision });
+      receive = event => {
+        const data = event.data;
+        if (!data || data.kind !== "saved" || data.channel !== channel) return;
+        if (data.ok !== true || data.revision !== record.revision) {
+          finish(new Error(data.code === "closed" ? "closed" : "save-failed"));
+          return;
+        }
+        finish(null, data);
+      };
+      window.addEventListener("message", receive);
+      frame.onload = () => {};
       frame.onerror = () => finish(new Error("network"));
-      frame.src = url + "?record=" + encodeURIComponent(JSON.stringify(record));
+      frame.src = url + "?channel=" + channel + "&record=" + encodeURIComponent(JSON.stringify(record));
       document.body.append(frame);
     });
   }
@@ -68,21 +79,20 @@
         return true;
       } catch {
         persistenceFailed = true;
-        notify("ブラウザに送信状態を保存できないため，集計用データは送信していません。", true);
+        notify("この端末に診断データを保存できないため、送信できません。", true);
         return false;
       }
     }
 
     function prepare(typeCode, intent) {
       if (!typePattern.test(typeCode)) return false;
-      // Read again so another tab's completed write is not silently overwritten.
       const previous = read(storage) || record;
       try {
         return persist({ version: 1, id: previous?.id || crypto.randomUUID(), typeCode,
           intent: intent === undefined ? (previous?.intent ?? null) : intent,
           revision: (previous?.revision || 0) + 1, syncedRevision: previous?.syncedRevision || 0 });
       } catch {
-        notify("このブラウザでは集計用データを送信できません。診断結果はご利用いただけます。", true);
+        notify("このブラウザでは診断データを送信できません。診断結果はこの端末だけで利用できます。", true);
         return false;
       }
     }
@@ -90,20 +100,19 @@
     async function sync() {
       if (!url || !record || busy || persistenceFailed || record.typeCode !== currentType) return;
       if (record.syncedRevision === record.revision) {
-        notify(record.intent === null ? "診断タイプを集計用に保存しました。" : "参加意向を保存しました。ありがとうございます。");
+        notify(record.intent === null ? "診断タイプを保存しました。" : "参加意向を保存しました。ありがとうございます。");
         return;
       }
       busy = true;
-      notify("集計用データを保存しています…");
+      notify("診断データを保存しています…");
       const snapshot = { id: record.id, typeCode: record.typeCode, intent: record.intent, revision: record.revision };
       try {
         await send(url, snapshot);
         if (record.revision === snapshot.revision) {
           const latest = read(storage);
-          // Do not undo a newer local revision written in another tab.
           if (latest?.id === record.id && latest.revision === snapshot.revision) {
             const next = { ...record, syncedRevision: snapshot.revision };
-            try { storage.setItem(key, JSON.stringify(next)); } catch { /* Resending the same revision is idempotent. */ }
+            try { storage.setItem(key, JSON.stringify(next)); } catch { /* The server write is idempotent. */ }
             record = next;
           } else if (latest) record = latest;
         }
@@ -113,10 +122,11 @@
           notify("別の診断結果が保存されています。ページを開き直してください。", true);
           return;
         }
-        notify(record.intent === null ? "診断タイプを集計用に保存しました。" : "参加意向を保存しました。ありがとうございます。");
+        notify(record.intent === null ? "診断タイプを保存しました。" : "参加意向を保存しました。ありがとうございます。");
       } catch (error) {
         busy = false;
-        notify(error.message === "closed" ? "現在，集計用データの受付を停止しています。" : "保存を確認できませんでした。通信状況を確認して，再試行してください。", true, error.message !== "closed");
+        notify(error.message === "closed" ? "現在、参加意向データの受付を停止しています。" :
+          "保存を確認できませんでした。通信状況を確認して、再試行してください。", true, error.message !== "closed");
       }
     }
 
@@ -126,7 +136,7 @@
         currentType = typeCode;
         if (!url) return;
         if (completed && !prepare(typeCode)) return;
-        if (!record || record.typeCode !== typeCode) { notify("参加意向への回答は任意です。"); return; }
+        if (!record || record.typeCode !== typeCode) { notify("参加意向への回答が必要です。"); return; }
         sync();
       },
       choose(typeCode, intent) {

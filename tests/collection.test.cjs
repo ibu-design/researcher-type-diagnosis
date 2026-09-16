@@ -83,7 +83,11 @@ function client(initial = null, deny = false) {
   const frames = [];
   const timers = new Set();
   const statuses = [];
-  const window = {};
+  const listeners = new Set();
+  const window = {
+    addEventListener: (type, listener) => { if (type === 'message') listeners.add(listener); },
+    removeEventListener: (type, listener) => { if (type === 'message') listeners.delete(listener); }
+  };
   const storage = {
     getItem: key => map.get(key) || null,
     setItem: (key, value) => { if (deny) throw Error('denied'); map.set(key,value); }
@@ -98,7 +102,8 @@ function client(initial = null, deny = false) {
     const request = new URL(frame.src);
     const payload = JSON.parse(request.searchParams.get('record'));
     return {payload, ack: (ok=true,code) => {
-      if (ok) frame.onload(); else frame.onerror();
+      const channel = request.searchParams.get('channel');
+      for (const listener of listeners) listener({data:{kind:'saved',channel,ok,code,revision:payload.revision}});
     }};
   }
   return {make,frames,statuses,ready,map,timers};
@@ -116,7 +121,7 @@ test('unconfigured or untrusted endpoint never sends data', () => {
   assert.equal(c.frames.length,0);
 });
 
-test('client sends minimum fields, waits for load acknowledgement, changes and restores intent', async () => {
+test('client sends minimum fields, waits for server acknowledgement, changes and restores intent', async () => {
   const c = client();
   const app = c.make(url);
   app.result('IPF',true);

@@ -10,7 +10,7 @@ function setupStorage() {
   const properties = PropertiesService.getScriptProperties();
   let id = properties.getProperty("SPREADSHEET_ID");
   if (!id) {
-    const spreadsheet = SpreadsheetApp.create("研究者タイプ診断 - 保存データ（非公開）");
+    const spreadsheet = SpreadsheetApp.create("Researcher Type Diagnosis - Private Responses");
     const sheet = spreadsheet.getSheets()[0];
     sheet.setName(SHEET_NAME);
     sheet.getRange(1, 1, 1, 4).setValues([["record_id", "type_code", "attendance", "revision"]]);
@@ -26,17 +26,30 @@ function setupStorage() {
 
 function doGet(event) {
   const params = event && event.parameter || {};
-  if (typeof params.record === "string") {
-    let result;
-    try {
-      result = saveResponse(JSON.parse(params.record || ""));
-    } catch (error) {
-      result = { ok: false, code: "invalid" };
-    }
-    const title = result.ok === true ? "saved" : "not-saved";
-    return HtmlService.createHtmlOutput('<!doctype html><html><head><meta charset="utf-8"><title>' + title + '</title></head><body></body></html>');
+  if (typeof params.record !== "string") {
+    return HtmlService.createHtmlOutput("This endpoint accepts responses from the diagnosis site.");
   }
-  return HtmlService.createHtmlOutput("保存受付用のページです。診断サイトからご利用ください。");
+  let record = null;
+  let result;
+  try {
+    record = JSON.parse(params.record || "");
+    result = saveResponse(record);
+  } catch (error) {
+    console.error(error);
+    result = { ok: false, code: "error" };
+  }
+  const payload = {
+    kind: "saved",
+    channel: typeof params.channel === "string" ? params.channel : null,
+    ok: result.ok === true,
+    revision: record && record.revision,
+    code: result.code || "error"
+  };
+  const message = JSON.stringify(payload).replace(/</g, "\\u003c");
+  const html = '<!doctype html><html><head><meta charset="utf-8"></head><body><script>' +
+    'window.top.postMessage(' + message + ', "*");' +
+    '</script></body></html>';
+  return HtmlService.createHtmlOutput(html);
 }
 
 function validRecord_(record) {
@@ -62,9 +75,7 @@ function saveResponse(record) {
     if (cell) {
       const range = sheet.getRange(cell.getRow(), 1, 1, 4);
       const old = range.getValues()[0];
-      if (old[3] > record.revision || (old[3] === record.revision && (old[1] !== values[1] || old[2] !== values[2]))) {
-        return { ok: false, code: "conflict" };
-      }
+      if (old[3] > record.revision || (old[3] === record.revision && (old[1] !== values[1] || old[2] !== values[2]))) return { ok: false, code: "conflict" };
       if (old[3] < record.revision) range.setValues([values]);
     } else {
       if (lastRow >= 50001) return { ok: false, code: "capacity" };
