@@ -344,11 +344,15 @@ function initializeApp() {
       });
       const bar = element("div", "axis-bar");
       bar.setAttribute("aria-hidden", "true");
-      axis.poles.forEach((pole) => {
-        const segment = element("span", "axis-segment" + (pole === selectedPole ? " is-selected" : ""));
-        segment.style.width = result.percentages[key][pole] + "%";
-        bar.append(segment);
-      });
+      const leftPercent = result.percentages[key][axis.poles[0]];
+      const rightPercent = result.percentages[key][axis.poles[1]];
+      const leftSegment = element("span", "axis-segment" + (axis.poles[0] === selectedPole ? " is-selected" : ""));
+      leftSegment.style.width = (leftPercent / 2) + "%";
+      leftSegment.style.left = "calc(50% - " + (leftPercent / 2) + "%)";
+      const rightSegment = element("span", "axis-segment" + (axis.poles[1] === selectedPole ? " is-selected" : ""));
+      rightSegment.style.width = (rightPercent / 2) + "%";
+      rightSegment.style.left = "50%";
+      bar.append(leftSegment, rightSegment);
       values.append(poles, bar);
       row.append(values);
       return row;

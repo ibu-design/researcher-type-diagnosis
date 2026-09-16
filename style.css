@@ -600,7 +600,8 @@ input:checked ~ .answer-state {
 }
 
 .axis-segment {
-  flex: none;
+  position: absolute;
+  top: 0;
   height: 100%;
   background: #d9e2df;
 }
