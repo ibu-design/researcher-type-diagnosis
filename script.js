@@ -164,6 +164,10 @@ const references = [
   { axis: "第3軸：原理追究 / 社会応用", citation: "Stokes, D. E.（1997）. Pasteur's Quadrant." }
 ];
 
+const resultStorageKey = "researcher-type-diagnosis:result";
+// 質問の意味や採点を変更する場合は更新し，旧版の結果を誤って復元しない。
+const resultStorageVersion = 1;
+
 function calculateResult(answers) {
   if (!Array.isArray(answers) || answers.length !== questions.length) {
     throw new RangeError("9問すべての回答が必要です。");
@@ -175,6 +179,20 @@ function calculateResult(answers) {
       throw new RangeError(question.id + "の回答は1〜6の整数で指定してください。");
     }
     scores[question.axis] += question.reversed ? 7 - answer : answer;
+  });
+  return resultFromScores(scores);
+}
+
+function resultFromScores(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new RangeError("3軸の得点が必要です。");
+  }
+  const scores = {};
+  Object.keys(axes).forEach((key) => {
+    if (!Number.isInteger(input[key]) || input[key] < 3 || input[key] > 18) {
+      throw new RangeError(key + "の得点は3〜18の整数で指定してください。");
+    }
+    scores[key] = input[key];
   });
   const typeCode = Object.entries(axes)
     .map(([key, axis]) => axis.poles[scores[key] <= 10 ? 0 : 1])
@@ -190,13 +208,67 @@ function calculateResult(answers) {
   return { typeCode, scores, percentages };
 }
 
+function readSavedResult(storage) {
+  try {
+    const record = JSON.parse(storage.getItem(resultStorageKey));
+    if (!record || record.version !== resultStorageVersion) return null;
+    return resultFromScores(record.scores);
+  } catch {
+    return null;
+  }
+}
+
+function writeSavedResult(storage, result) {
+  try {
+    const { scores } = resultFromScores(result.scores);
+    storage.setItem(resultStorageKey, JSON.stringify({ version: resultStorageVersion, scores }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function removeSavedResult(storage) {
+  try {
+    storage.removeItem(resultStorageKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function initializeApp() {
   const byId = (id) => document.getElementById(id);
-  const state = { questionIndex: 0, answers: Array(questions.length).fill(null) };
+  let storage;
+  try { storage = window.localStorage; } catch { /* 保存を拒否するブラウザでも診断を継続する。 */ }
+  const state = { questionIndex: 0, answers: Array(questions.length).fill(null), savedResult: readSavedResult(storage) };
   const screens = ["start-screen", "question-screen", "result-screen"];
   const nextButton = byId("next-button");
   const startButton = byId("start-button");
   const aboutDialog = byId("about-dialog");
+  const deleteDialog = byId("delete-result-dialog");
+  const collector = window.createDiagnosisCollector(window.diagnosisConfig?.collectionUrl, storage, updateCollection);
+  let displayedType = null;
+  if (collector.enabled) {
+    byId("symposium-interest").hidden = false;
+    byId("collection-notice").hidden = false;
+    byId("collection-privacy").textContent = "診断完了時にタイプを，参加意向への回答時にその選択を，主催者の非公開Googleスプレッドシートに保存します。氏名・メールアドレス・個々の回答・軸の得点は送信しません。重複防止用のランダムな識別子と更新番号を使用します。同じブラウザでは最新の内容に更新しますが，別端末等の重複を完全には防げないため，実人数ではなく集計件数として扱います。個別データや集計値を本サイトで公開することはありません。タイプ別の集計結果は会場で紹介予定です。端末内の保存結果を削除しても，送信済みの記録や集計用の識別子・送信状態は削除されません。";
+  }
+
+  function updateCollection(status) {
+    byId("collection-status").hidden = !collector.enabled || !status.message;
+    byId("collection-status").textContent = status.message;
+    byId("collection-status").classList.toggle("is-error", status.error);
+    byId("collection-retry").hidden = !status.retry;
+    document.querySelectorAll("[data-interest]").forEach((button) => {
+      button.disabled = status.busy;
+      button.setAttribute("aria-pressed", String(button.dataset.interest === status.intent));
+    });
+  }
+  document.querySelectorAll("[data-interest]").forEach((button) => {
+    button.addEventListener("click", () => collector.choose(displayedType, button.dataset.interest));
+  });
+  byId("collection-retry").addEventListener("click", () => collector.retry());
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -244,8 +316,8 @@ function initializeApp() {
     showScreen("question-screen", "question-title");
   }
 
-  function renderResult() {
-    const result = calculateResult(state.answers);
+  function renderResult(result, saved, completed = false) {
+    displayedType = result.typeCode;
     const type = researcherTypes[result.typeCode];
     byId("result-code").textContent = type.typeCode;
     byId("result-title").textContent = type.titleJa;
@@ -282,8 +354,15 @@ function initializeApp() {
       return row;
     });
     byId("result-axes").replaceChildren(...rows);
+    byId("result-storage-status").textContent = saved
+      ? "このブラウザに結果を保存しています。"
+      : (state.savedResult ? "今回の結果を保存できませんでした。前回の保存結果は残っています。" : "結果を保存できませんでした。ページを閉じるとこの結果は失われます。");
+    byId("result-storage-status").classList.toggle("is-error", !saved);
+    byId("delete-result-button").hidden = !state.savedResult;
+    byId("saved-result-button").hidden = !state.savedResult;
     document.title = type.titleJa + "（" + type.typeCode + "）| 研究者タイプ診断";
     showScreen("result-screen", "result-title");
+    collector.result(result.typeCode, completed);
   }
 
   Object.values(researcherTypes).forEach((type) => {
@@ -339,7 +418,10 @@ function initializeApp() {
       return;
     }
     if (state.questionIndex === questions.length - 1) {
-      renderResult();
+      const result = calculateResult(state.answers);
+      const saved = writeSavedResult(storage, result);
+      if (saved) state.savedResult = result;
+      renderResult(result, saved, true);
     } else {
       state.questionIndex += 1;
       renderQuestion();
@@ -364,6 +446,32 @@ function initializeApp() {
     renderQuestion();
   });
 
+  byId("saved-result-button").addEventListener("click", () => {
+    if (state.savedResult) renderResult(state.savedResult, true);
+  });
+
+  byId("delete-result-button").addEventListener("click", () => {
+    deleteDialog.returnValue = "";
+    deleteDialog.showModal();
+    document.body.classList.add("dialog-open");
+  });
+  deleteDialog.addEventListener("close", () => {
+    document.body.classList.remove("dialog-open");
+    if (deleteDialog.returnValue !== "delete") return;
+    if (!removeSavedResult(storage)) {
+      byId("result-storage-status").textContent = "保存結果を削除できませんでした。ブラウザの設定からサイトデータを削除してください。";
+      byId("result-storage-status").classList.add("is-error");
+      return;
+    }
+    state.savedResult = null;
+    state.answers.fill(null);
+    state.questionIndex = 0;
+    byId("saved-result-button").hidden = true;
+    startButton.textContent = "診断をはじめる";
+    document.title = "研究者タイプ診断";
+    showScreen("start-screen", "site-title");
+  });
+
   document.querySelectorAll("[data-about]").forEach((button) => {
     button.disabled = false;
     button.addEventListener("click", () => {
@@ -379,6 +487,7 @@ function initializeApp() {
     });
   });
   aboutDialog.addEventListener("close", () => document.body.classList.remove("dialog-open"));
+  if (state.savedResult) renderResult(state.savedResult, true);
 }
 
 if (typeof document !== "undefined") initializeApp();
