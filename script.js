@@ -104,62 +104,63 @@ const answerLabels = {
   ]
 };
 
+// 先行研究の概念を参考にしたイベント独自の質問。原尺度の転載・翻訳ではない。
 const questions = [
   {
     id: "Q1", axis: "IC", scale: "agreement",
-    text: "一人で取り組むよりも，他の人とグループで取り組む方が好きだ．"
+    text: "新しいアイデアを考えるとき，一人で考えるより，誰かと話しながら考えを広げたい。"
   },
   {
     id: "Q2", axis: "IC", scale: "agreement", reversed: true,
-    text: "選べるなら，他の人とグループで取り組むよりも，一人で取り組める活動を選びたい．"
+    text: "気になることを調べるとき，誰かと一緒に調べるより，一人で取り組みたい。"
   },
   {
     id: "Q3", axis: "IC", scale: "agreement",
-    text: "一人で取り組むよりも，グループで取り組む方がよい．"
+    text: "難しい課題に出会ったら，一人で取り組むより，仲間と一緒に考えたい。"
   },
   {
     id: "Q4", axis: "PE", scale: "bipolar",
-    text: "何かに取り組むとき，どちらに近いですか？",
-    a: "始める前に，各ステップをどのように進めるかよく考えておきたい．",
-    b: "まず取り組み，必要に応じて進め方を見直したい．"
+    text: "初めてのことに挑戦するとき，どちらから始めたいですか？",
+    a: "やることと順番を整理してから，取りかかる。",
+    b: "まず少し試してみて，進め方を探る。"
   },
   {
     id: "Q5", axis: "PE", scale: "bipolar",
-    text: "何かに取り組むとき，どちらに近いですか？",
-    a: "各ステップを具体的に計画してから進めたい．",
-    b: "実際に取り組んだ結果をもとに，繰り返し改善しながら進めたい．"
+    text: "作ったものをよくしたいとき，どちらの進め方がしっくりきますか？",
+    a: "改善する点と手順を決めてから，手を加える。",
+    b: "少しずつ手を加え，変化を確かめながら改善する。"
   },
   {
     id: "Q6", axis: "PE", scale: "bipolar",
-    text: "何かに取り組むとき，どちらに近いですか？",
-    a: "必要になる細かなステップまで，できるだけ前もって考えておきたい．",
-    b: "一度終えた部分でも，必要であればもう一度取り組んで改善したい．"
+    text: "思ったように進まないとき，次にどうしたいですか？",
+    a: "うまくいかない点を整理して，次の手順を考える。",
+    b: "別のやり方を試して，結果を見ながら次を決める。"
   },
   {
     id: "Q7", axis: "FA", scale: "bipolar",
-    text: "研究テーマを選ぶとしたら，どちらにより魅力を感じますか？",
-    a: "仕組みや原理を明らかにできる研究テーマ",
-    b: "社会や現場の具体的な課題の解決につながる研究テーマ"
+    text: "身近な「不思議」を研究するとしたら，どちらにひかれますか？",
+    a: "その現象が起きる理由や仕組みを突き止める。",
+    b: "その現象を利用して，暮らしの困りごとを解決する。"
   },
   {
     id: "Q8", axis: "FA", scale: "bipolar",
-    text: "研究成果として，どちらにより魅力を感じますか？",
-    a: "新しい理論や知識を生み出し，物事への理解を深める成果",
-    b: "実際に使える方法や技術，仕組みにつながる成果"
+    text: "研究で新しい発見があったら，次に知りたいのはどちらですか？",
+    a: "発見の背景に，どんな仕組みや法則があるのか。",
+    b: "発見を，どんな課題の解決に生かせるのか。"
   },
   {
     id: "Q9", axis: "FA", scale: "bipolar",
-    text: "研究の面白さとして，どちらにより魅力を感じますか？",
-    a: "「なぜそうなるのか」を深く理解できること",
-    b: "「どのように役立てられるか」を具体化できること"
+    text: "自分の研究を紹介するとき，どちらを伝えられるとうれしいですか？",
+    a: "「これまで分からなかった理由が，分かりました」",
+    b: "「誰かの困りごとを解決する方法が，できました」"
   }
 ];
 
-// 提供された書誌情報のみを記載。不明な著者名・DOI・巻号等は公開前に確認する。
+// 確認できた出版社情報へのリンクを添付。独自の質問・採点の検証根拠ではない。
 const references = [
-  { axis: "第1軸：個人 / 協働", citation: "Wagner, J. A. III.（1995）. Studies of individualism-collectivism: Effects on cooperation in groups. Academy of Management Journal, 38, 152–172." },
-  { axis: "第2軸：計画 / 試行錯誤", citation: "Bledow et al.（2026）. Planning / Iterationに関する尺度・研究．Journal of Occupational and Organizational Psychology.", pending: true },
-  { axis: "第3軸：原理追究 / 社会応用", citation: "Bentley et al.（2015）. 研究者のbasic/theoreticalおよびapplied/practically orientedな研究志向に関する研究．Higher Education.", pending: true },
+  { axis: "第1軸：個人 / 協働", citation: "Wagner, J. A. III.（1995）. Studies of individualism-collectivism: Effects on cooperation in groups. Academy of Management Journal, 38, 152–172.", url: "https://doi.org/10.5465/256731" },
+  { axis: "第2軸：計画 / 試行錯誤", citation: "Bledow, R., Eun, H.-J., & Vossaert, L.（2026）. A closer look at the innovator: The interplay between divergent and convergent processes of self-regulation. Journal of Occupational and Organizational Psychology, 99(1), e70102.", url: "https://doi.org/10.1111/joop.70102" },
+  { axis: "第3軸：原理追究 / 社会応用", citation: "Bentley, P. J., Gulbrandsen, M., & Kyvik, S.（2015）. The relationship between basic and applied research in universities. Higher Education, 70, 689–709.", url: "https://doi.org/10.1007/s10734-015-9861-2" },
   { axis: "第3軸：原理追究 / 社会応用", citation: "Stokes, D. E.（1997）. Pasteur's Quadrant." }
 ];
 
@@ -309,7 +310,14 @@ function initializeApp() {
   references.forEach((reference) => {
     const item = element("li");
     item.append(element("span", "reference-axis", reference.axis), element("p", "", reference.citation));
-    if (reference.pending) item.append(element("span", "reference-pending", "書誌情報確認中"));
+    if (reference.url) {
+      const link = element("a", "reference-link", "論文の掲載ページ");
+      link.href = reference.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.title = "新しいタブで開きます";
+      item.append(link);
+    }
     byId("reference-list").append(item);
   });
 

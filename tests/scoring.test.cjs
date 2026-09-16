@@ -9,6 +9,24 @@ const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(root, "script.js"), "utf8"), context);
 const calculate = vm.runInContext("calculateResult", context);
 const types = vm.runInContext("researcherTypes", context);
+const questions = vm.runInContext("questions", context);
+
+test("revised scenarios preserve all nine question IDs, axes, scales and scoring directions", () => {
+  assert.equal(questions.length, 9);
+  assert.equal(new Set(Array.from(questions, question => question.text)).size, 9);
+  questions.forEach((question, index) => {
+    assert.equal(question.id, "Q" + (index + 1));
+    assert.equal(question.axis, ["IC", "PE", "FA"][Math.floor(index / 3)]);
+    assert.equal(question.scale, index < 3 ? "agreement" : "bipolar");
+    assert.equal(Boolean(question.reversed), index === 1);
+    assert.ok(question.text.trim().length > 0);
+    if (question.scale === "bipolar") {
+      assert.ok(question.a.trim().length > 0);
+      assert.ok(question.b.trim().length > 0);
+      assert.notEqual(question.a, question.b);
+    }
+  });
+});
 
 test("Q2 is reversed; the three axes have independent scores", () => {
   const result = calculate([1, 6, 1, 1, 1, 1, 6, 6, 6]);

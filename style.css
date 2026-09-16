@@ -795,11 +795,13 @@ input:checked ~ .answer-state {
   font-size: 0.875rem;
 }
 
-.reference-pending {
-  display: block;
-  margin-top: 6px;
-  color: var(--color-muted);
-  font-size: 0.75rem;
+.reference-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-accent-dark);
+  font-size: 0.8125rem;
+  text-underline-offset: 4px;
 }
 
 @media (min-width: 720px) {
