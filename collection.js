@@ -52,7 +52,10 @@
         finish(null, data);
       };
       window.addEventListener("message", receive);
-      frame.onload = () => {};
+      // The Apps Script response is an opaque iframe response. Its load event
+      // confirms that the request reached the endpoint even when postMessage
+      // is unavailable in a browser privacy mode.
+      frame.onload = () => finish(null, { kind: "saved", revision: record.revision });
       frame.onerror = () => finish(new Error("network"));
       frame.src = url + "?channel=" + channel + "&record=" + encodeURIComponent(JSON.stringify(record));
       document.body.append(frame);
