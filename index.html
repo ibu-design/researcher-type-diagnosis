@@ -6,10 +6,10 @@
     <meta name="description" content="大阪大学まちかね祭「あなたの知らない博士の世界」の研究者タイプ診断。ヒューマンウェアイノベーション学位プログラムのイベントの一部として，9つの質問からあなたの研究スタイルを診断します。" />
     <meta name="theme-color" content="#2f7d73" />
     <title>研究者タイプ診断</title>
-    <link rel="stylesheet" href="style.css?v=b442cc2" />
+    <link rel="stylesheet" href="style.css?v=interestgate1" />
     <script src="config.js" defer></script>
     <script src="collection.js?v=saveack2" defer></script>
-    <script src="script.js?v=b442cc2" defer></script>
+    <script src="script.js?v=interestgate1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">本文へ</a>
@@ -60,6 +60,18 @@
           </div>
         </form>
       </section>
+      <section id="interest-screen" class="interest-screen" aria-labelledby="interest-title" hidden>
+        <div class="interest-panel">
+          <p class="eyebrow">診断結果の前に</p>
+          <h2 id="interest-title" tabindex="-1">シンポジウムに来てみたいですか？</h2>
+          <p id="interest-note">参加予約・事前登録ではありません。座席の確保をお約束するものではありません。</p>
+          <div class="interest-choices" role="group" aria-labelledby="interest-title" aria-describedby="interest-note">
+            <button type="button" class="secondary-button" data-interest="yes" aria-pressed="false">行くと思う！</button>
+            <button type="button" class="secondary-button" data-interest="no" aria-pressed="false">行かないかも…</button>
+          </div>
+          <p class="survey-note">回答は任意です。選択するとすぐに診断結果が表示されます。</p>
+        </div>
+      </section>
       <section id="result-screen" class="result-screen" aria-labelledby="result-title" hidden>
         <div class="result-heading">
           <p class="eyebrow">あなたの研究者タイプ</p>
@@ -87,15 +99,6 @@
             <p>共通デザインのオリジナルファイルと、あなたのタイプのステッカーを会場でお渡しします。</p>
             <p><strong>結果のスクリーンショットを，会場でスタッフに見せてください。</strong></p>
             <p>みなさんの研究者タイプの集計結果も，会場で紹介する予定です。</p>
-            <div id="symposium-interest" class="symposium-interest" aria-labelledby="symposium-interest-title" hidden>
-              <h4 id="symposium-interest-title">シンポジウムに来てみたいですか？</h4>
-              <p id="symposium-interest-note">参加予約・事前登録ではありません。座席の確保をお約束するものではありません。</p>
-              <div class="interest-choices" role="group" aria-labelledby="symposium-interest-title" aria-describedby="symposium-interest-note">
-                <button type="button" class="secondary-button" data-interest="yes" aria-pressed="false">行くと思う！</button>
-                <button type="button" class="secondary-button" data-interest="no" aria-pressed="false">行かないかも…</button>
-              </div>
-              <p class="survey-note">回答は任意です。シールのお渡しには影響しません。回答後も変更できます。</p>
-            </div>
             <p id="collection-status" class="storage-status" role="status" hidden></p>
             <button id="collection-retry" type="button" class="text-button" hidden>保存を再試行</button>
           </div>

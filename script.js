@@ -242,15 +242,15 @@ function initializeApp() {
   let storage;
   try { storage = window.localStorage; } catch { /* 保存を拒否するブラウザでも診断を継続する。 */ }
   const state = { questionIndex: 0, answers: Array(questions.length).fill(null), savedResult: readSavedResult(storage) };
-  const screens = ["start-screen", "question-screen", "result-screen"];
+  const screens = ["start-screen", "question-screen", "interest-screen", "result-screen"];
   const nextButton = byId("next-button");
   const startButton = byId("start-button");
   const aboutDialog = byId("about-dialog");
   const deleteDialog = byId("delete-result-dialog");
   const collector = window.createDiagnosisCollector(window.diagnosisConfig?.collectionUrl, storage, updateCollection);
   let displayedType = null;
+  let pendingResult = null;
   if (collector.enabled) {
-    byId("symposium-interest").hidden = false;
     byId("collection-notice").hidden = false;
     byId("collection-privacy").textContent = "診断完了時にタイプを，参加意向への回答時にその選択を，主催者の非公開Googleスプレッドシートに保存します。氏名・メールアドレス・個々の回答・軸の得点は送信しません。重複防止用のランダムな識別子と更新番号を使用します。同じブラウザでは最新の内容に更新しますが，別端末等の重複を完全には防げないため，実人数ではなく集計件数として扱います。個別データや集計値を本サイトで公開することはありません。タイプ別の集計結果は会場で紹介予定です。端末内の保存結果を削除しても，送信済みの記録や集計用の識別子・送信状態は削除されません。";
   }
@@ -266,7 +266,13 @@ function initializeApp() {
     });
   }
   document.querySelectorAll("[data-interest]").forEach((button) => {
-    button.addEventListener("click", () => collector.choose(displayedType, button.dataset.interest));
+    button.addEventListener("click", () => {
+      if (!pendingResult) return;
+      const pending = pendingResult;
+      pendingResult = null;
+      collector.choose(pending.result.typeCode, button.dataset.interest);
+      renderResult(pending.result, pending.saved, false);
+    });
   });
   byId("collection-retry").addEventListener("click", () => collector.retry());
 
@@ -425,7 +431,14 @@ function initializeApp() {
       const result = calculateResult(state.answers);
       const saved = writeSavedResult(storage, result);
       if (saved) state.savedResult = result;
-      renderResult(result, saved, true);
+      pendingResult = { result, saved };
+      byId("collection-status").hidden = true;
+      byId("collection-retry").hidden = true;
+      document.querySelectorAll("[data-interest]").forEach((button) => {
+        button.disabled = false;
+        button.setAttribute("aria-pressed", "false");
+      });
+      showScreen("interest-screen", "interest-title");
     } else {
       state.questionIndex += 1;
       renderQuestion();

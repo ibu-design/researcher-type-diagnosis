@@ -472,6 +472,41 @@ input:checked ~ .answer-state {
   margin-top: 24px;
 }
 
+.interest-screen {
+  min-height: min(72vh, 620px);
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
+  background: var(--color-warm);
+  border-block: 1px solid #eee6d9;
+}
+
+.interest-panel {
+  width: min(100%, 560px);
+  text-align: center;
+}
+
+.interest-panel h2 {
+  margin-top: 8px;
+  font-size: clamp(1.4rem, 6vw, 2rem);
+  line-height: 1.5;
+}
+
+.interest-panel > p:not(.eyebrow) {
+  margin-top: 16px;
+  color: var(--color-muted);
+  line-height: 1.8;
+}
+
+.interest-panel .interest-choices {
+  margin-top: 28px;
+}
+
+.interest-panel .survey-note {
+  margin-top: 14px;
+  font-size: 0.8125rem;
+}
+
 .result-screen {
   padding-top: 28px;
 }
