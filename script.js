@@ -237,6 +237,17 @@ function removeSavedResult(storage) {
   }
 }
 
+function shuffledQuestionOrder() {
+  const order = questions.map((question, index) => ({ question, index }));
+  for (let index = order.length - 1; index > 0; index -= 1) {
+    const random = new Uint32Array(1);
+    crypto.getRandomValues(random);
+    const swapIndex = random[0] % (index + 1);
+    [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
+  }
+  return order;
+}
+
 function initializeApp() {
   const byId = (id) => document.getElementById(id);
   let storage;
@@ -247,6 +258,7 @@ function initializeApp() {
   const startButton = byId("start-button");
   const aboutDialog = byId("about-dialog");
   const deleteDialog = byId("delete-result-dialog");
+  const questionOrder = shuffledQuestionOrder();
   const collector = window.createDiagnosisCollector(window.diagnosisConfig?.collectionUrl, storage, updateCollection);
   let displayedType = null;
   let pendingResult = null;
@@ -270,7 +282,10 @@ function initializeApp() {
       if (!pendingResult) return;
       const pending = pendingResult;
       pendingResult = null;
-      collector.choose(pending.result.typeCode, button.dataset.interest);
+      collector.choose(pending.result.typeCode, button.dataset.interest, {
+        animalName: researcherTypes[pending.result.typeCode].animalName,
+        completedAt: pending.completedAt
+      });
       renderResult(pending.result, pending.saved, false);
     });
   });
@@ -290,7 +305,8 @@ function initializeApp() {
   }
 
   function renderQuestion() {
-    const question = questions[state.questionIndex];
+    const questionEntry = questionOrder[state.questionIndex];
+    const question = questionEntry.question;
     byId("question-title").textContent = question.text;
     byId("question-count").textContent = (state.questionIndex + 1) + " / " + questions.length;
     byId("question-progress").value = state.questionIndex + 1;
@@ -306,7 +322,7 @@ function initializeApp() {
       input.name = "answer";
       input.value = String(index + 1);
       input.required = true;
-      input.checked = state.answers[state.questionIndex] === index + 1;
+      input.checked = state.answers[questionEntry.index] === index + 1;
       const value = element("span", "answer-value", String(index + 1));
       value.setAttribute("aria-hidden", "true");
       const selected = element("span", "answer-state", "選択中");
@@ -317,7 +333,7 @@ function initializeApp() {
     byId("answer-options").replaceChildren(...options);
     byId("back-button").textContent = state.questionIndex === 0 ? "スタートへ" : "戻る";
     nextButton.textContent = state.questionIndex === questions.length - 1 ? "結果を見る" : "次へ";
-    nextButton.disabled = state.answers[state.questionIndex] === null;
+    nextButton.disabled = state.answers[questionEntry.index] === null;
     document.title = "質問 " + (state.questionIndex + 1) + " / " + questions.length + " | 研究者タイプ診断";
     showScreen("question-screen", "question-title");
   }
@@ -415,14 +431,14 @@ function initializeApp() {
 
   byId("answer-options").addEventListener("change", (event) => {
     if (!event.target.matches('input[name="answer"]')) return;
-    state.answers[state.questionIndex] = Number(event.target.value);
+    state.answers[questionOrder[state.questionIndex].index] = Number(event.target.value);
     nextButton.disabled = false;
     byId("answer-error").hidden = true;
   });
 
   byId("question-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    if (state.answers[state.questionIndex] === null) {
+    if (state.answers[questionOrder[state.questionIndex].index] === null) {
       byId("answer-error").hidden = false;
       byId("answer-options").querySelector("input").focus();
       return;
@@ -431,7 +447,7 @@ function initializeApp() {
       const result = calculateResult(state.answers);
       const saved = writeSavedResult(storage, result);
       if (saved) state.savedResult = result;
-      pendingResult = { result, saved };
+      pendingResult = { result, saved, completedAt: new Date().toISOString() };
       byId("collection-status").hidden = true;
       byId("collection-retry").hidden = true;
       document.querySelectorAll("[data-interest]").forEach((button) => {

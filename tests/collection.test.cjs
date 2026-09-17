@@ -8,16 +8,19 @@ const source = fs.readFileSync(path.join(__dirname, '../collection.js'), 'utf8')
 const backend = fs.readFileSync(path.join(__dirname, '../backend/Code.gs'), 'utf8');
 const url = 'https://script.google.com/macros/s/test-deployment/exec';
 const id = 'd84b1000-354d-4221-9fb0-162cf81d521f';
+const animals = { IPF:'フクロウ', IPA:'キツツキ', IEF:'タコ', IEA:'アライグマ', CPF:'ゾウ', CPA:'ビーバー', CEF:'イルカ', CEA:'カワウソ' };
+const completedAt = '2026-09-17T00:00:00.000Z';
 const plain = x => JSON.parse(JSON.stringify(x));
 
 function server() {
-  const rows = [['record_id', 'type_code', 'attendance', 'revision']];
+  const rows = [['record_id', 'completed_at', 'type_code', 'animal_name', 'attendance', 'revision']];
   const props = new Map([['ACCEPTING', 'true'], ['SPREADSHEET_ID', 'private']]);
   let locked = false;
   let released = 0;
   let flushFails = false;
   const sheet = {
     getLastRow: () => rows.length,
+    getLastColumn: () => 6,
     getRange: (row, col, length, width) => ({
       createTextFinder: value => ({ matchEntireCell: () => ({ findNext: () => {
         const index = rows.findIndex((r, i) => i >= row - 1 && r[0] === value);
@@ -40,9 +43,9 @@ function server() {
 test('server accepts only the four fields and the eight types, never formulas or extra personal data', () => {
   const s = server();
   for (const typeCode of ['IPF','IPA','IEF','IEA','CPF','CPA','CEF','CEA']) {
-    assert.equal(s.save({id, typeCode, intent: null, revision: s.rows[1]?.[3] + 1 || 1}).ok, true);
+    assert.equal(s.save({id, typeCode, animalName: animals[typeCode], completedAt, intent: null, revision: s.rows[1]?.[5] + 1 || 1}).ok, true);
   }
-  const valid = {id, typeCode:'IPF', intent:'yes', revision:20};
+  const valid = {id, typeCode:'IPF', animalName:animals.IPF, completedAt, intent:'yes', revision:20};
   for (const bad of [null, {}, {...valid,email:'private'}, {...valid,typeCode:'=IMPORTXML("x")'}, {...valid,id:'x'},
     {...valid,intent:'maybe'}, {...valid,revision:0}, {...valid,revision:1.5}, {...valid,revision:1000000001}]) {
     assert.equal(s.save(bad).ok, false);
@@ -52,20 +55,20 @@ test('server accepts only the four fields and the eight types, never formulas or
 
 test('server deduplicates retries, updates the same row, rejects stale or conflicting writes', () => {
   const s = server();
-  const first = { id, typeCode:'IPF', intent:null, revision:1 };
+  const first = { id, typeCode:'IPF', animalName:animals.IPF, completedAt, intent:null, revision:1 };
   assert.equal(s.save(first).ok, true);
   assert.equal(s.save(first).ok, true);
   assert.equal(s.rows.length, 2);
-  assert.equal(s.rows[1][2], '');
+  assert.equal(s.rows[1][4], '');
   assert.equal(s.save({...first,intent:'yes',revision:2}).ok, true);
-  assert.equal(s.save({...first,typeCode:'CEA',intent:'no',revision:3}).ok, true);
+  assert.equal(s.save({...first,typeCode:'CEA',animalName:'カワウソ',intent:'no',revision:3}).ok, true);
   assert.equal(s.save(first).code, 'conflict');
   assert.equal(s.save({...first,revision:3}).code, 'conflict');
-  assert.deepEqual(s.rows[1], [id,'CEA','no',3]);
+  assert.deepEqual(s.rows[1], [id,completedAt,'CEA','カワウソ','no',3]);
 });
 
 test('server handles closure and lock contention, always releases its acquired lock', () => {
-  const record = {id,typeCode:'IPF',intent:null,revision:1};
+  const record = {id,typeCode:'IPF',animalName:animals.IPF,completedAt,intent:null,revision:1};
   const s = server();
   s.props.set('ACCEPTING','false');
   assert.equal(s.save(record).code, 'closed');
@@ -145,6 +148,14 @@ test('client sends minimum fields, waits for server acknowledgement, changes and
   restored.choose('IPF','no');
   const third=c.ready(); third.ack(); await tick();
   assert.equal(c.statuses.at(-1).intent,'no');
+});
+
+test('client includes the animal name and completion time in a completed result', () => {
+  const c = client(); const app = c.make(url);
+  app.result('IPF', true, {animalName:'フクロウ', completedAt});
+  const payload = c.ready().payload;
+  assert.equal(payload.animalName, 'フクロウ');
+  assert.equal(payload.completedAt, completedAt);
 });
 
 test('failed send preserves pending revision for an idempotent retry', async () => {

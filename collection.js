@@ -13,6 +13,8 @@
           !Number.isSafeInteger(value.revision) || value.revision < 1 || value.revision > 1000000000 ||
           !Number.isInteger(value.syncedRevision) || value.syncedRevision < 0 || value.syncedRevision > value.revision) return null;
       return { version: 1, id: value.id, typeCode: value.typeCode, intent: value.intent,
+        animalName: typeof value.animalName === "string" ? value.animalName : "",
+        completedAt: typeof value.completedAt === "string" ? value.completedAt : "",
         revision: value.revision, syncedRevision: value.syncedRevision };
     } catch { return null; }
   }
@@ -87,13 +89,16 @@
       }
     }
 
-    function prepare(typeCode, intent) {
+    function prepare(typeCode, intent, metadata = {}) {
       if (!typePattern.test(typeCode)) return false;
       const previous = read(storage) || record;
       try {
-        return persist({ version: 1, id: previous?.id || crypto.randomUUID(), typeCode,
+        const next = { version: 1, id: previous?.id || crypto.randomUUID(), typeCode,
           intent: intent === undefined ? (previous?.intent ?? null) : intent,
-          revision: (previous?.revision || 0) + 1, syncedRevision: previous?.syncedRevision || 0 });
+          animalName: metadata.animalName || previous?.animalName || "",
+          completedAt: metadata.completedAt || previous?.completedAt || "",
+          revision: (previous?.revision || 0) + 1, syncedRevision: previous?.syncedRevision || 0 };
+        return persist(next);
       } catch {
         notify("このブラウザでは診断データを送信できません。診断結果はこの端末だけで利用できます。", true);
         return false;
@@ -109,6 +114,10 @@
       busy = true;
       notify("診断データを保存しています…");
       const snapshot = { id: record.id, typeCode: record.typeCode, intent: record.intent, revision: record.revision };
+      if (record.animalName && record.completedAt) {
+        snapshot.animalName = record.animalName;
+        snapshot.completedAt = record.completedAt;
+      }
       try {
         await send(url, snapshot);
         if (record.revision === snapshot.revision) {
@@ -135,18 +144,20 @@
 
     return {
       enabled: Boolean(url),
-      result(typeCode, completed) {
+      result(typeCode, completed, metadata) {
         currentType = typeCode;
         if (!url) return;
-        if (completed && !prepare(typeCode)) return;
+        if (completed && !prepare(typeCode, undefined, metadata)) return;
         if (!record || record.typeCode !== typeCode) { notify("参加意向への回答が必要です。"); return; }
         sync();
       },
-      choose(typeCode, intent) {
+      choose(typeCode, intent, metadata) {
         if (!url || busy || !["yes", "no"].includes(intent)) return;
         currentType = typeCode;
-        if (record?.typeCode === typeCode && record.intent === intent && !persistenceFailed) { sync(); return; }
-        if (prepare(typeCode, intent)) sync();
+        if (record?.typeCode === typeCode && record.intent === intent &&
+            (!metadata || (record.animalName === metadata.animalName && record.completedAt === metadata.completedAt)) &&
+            !persistenceFailed) { sync(); return; }
+        if (prepare(typeCode, intent, metadata)) sync();
       },
       retry() { sync(); }
     };

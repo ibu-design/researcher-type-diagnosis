@@ -2,6 +2,11 @@
 
 const SHEET_NAME = "responses";
 const TYPE_CODES = ["IPF", "IPA", "IEF", "IEA", "CPF", "CPA", "CEF", "CEA"];
+const ANIMAL_NAMES = {
+  IPF: "フクロウ", IPA: "キツツキ", IEF: "タコ", IEA: "アライグマ",
+  CPF: "ゾウ", CPA: "ビーバー", CEF: "イルカ", CEA: "カワウソ"
+};
+const HEADERS = ["record_id", "completed_at", "type_code", "animal_name", "attendance", "revision"];
 
 // Run once in the editor as the owner. This never changes sharing permissions.
 function setupStorage() {
@@ -13,13 +18,15 @@ function setupStorage() {
     const spreadsheet = SpreadsheetApp.create("Researcher Type Diagnosis - Private Responses");
     const sheet = spreadsheet.getSheets()[0];
     sheet.setName(SHEET_NAME);
-    sheet.getRange(1, 1, 1, 4).setValues([["record_id", "type_code", "attendance", "revision"]]);
-    sheet.getRange(1, 1, 1, 4).setFontWeight("bold").setBackground("#eef6f3");
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold").setBackground("#eef6f3");
     sheet.setFrozenRows(1);
     sheet.setColumnWidth(1, 320);
-    sheet.setColumnWidths(2, 3, 140);
+    sheet.setColumnWidths(2, 5, 140);
     id = spreadsheet.getId();
     properties.setProperties({ SPREADSHEET_ID: id, ACCEPTING: "true" });
+  } else {
+    migrateSheet_(SpreadsheetApp.openById(id).getSheetByName(SHEET_NAME));
   }
   console.log("https://docs.google.com/spreadsheets/d/" + id + "/edit");
 }
@@ -54,10 +61,27 @@ function doGet(event) {
 
 function validRecord_(record) {
   return record && typeof record === "object" && !Array.isArray(record) &&
-    Object.keys(record).sort().join(",") === "id,intent,revision,typeCode" &&
+    Object.keys(record).sort().join(",") === "animalName,completedAt,id,intent,revision,typeCode" &&
     typeof record.id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(record.id) &&
-    TYPE_CODES.indexOf(record.typeCode) !== -1 && [null, "yes", "no"].indexOf(record.intent) !== -1 &&
+    TYPE_CODES.indexOf(record.typeCode) !== -1 && record.animalName === ANIMAL_NAMES[record.typeCode] &&
+    typeof record.completedAt === "string" && !isNaN(Date.parse(record.completedAt)) &&
+    [null, "yes", "no"].indexOf(record.intent) !== -1 &&
     Number.isInteger(record.revision) && record.revision >= 1 && record.revision <= 1000000000;
+}
+
+function migrateSheet_(sheet) {
+  const lastRow = sheet.getLastRow();
+  const lastColumn = sheet.getLastColumn();
+  const header = lastColumn ? sheet.getRange(1, 1, 1, lastColumn).getValues()[0] : [];
+  if (header.slice(0, HEADERS.length).join("|") === HEADERS.join("|")) return;
+  const oldRows = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, Math.min(lastColumn, 4)).getValues() : [];
+  const rows = [HEADERS].concat(oldRows.map(row => [row[0] || "", "", row[1] || "", "", row[2] || "", row[3] || ""]));
+  sheet.clearContents();
+  sheet.getRange(1, 1, rows.length, HEADERS.length).setValues(rows);
+  sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold").setBackground("#eef6f3");
+  sheet.setFrozenRows(1);
+  sheet.setColumnWidth(1, 320);
+  sheet.setColumnWidths(2, 5, 140);
 }
 
 // No public read/list/aggregate endpoint. Only the holder of a random ID can update its row.
@@ -69,17 +93,19 @@ function saveResponse(record) {
   if (!lock.tryLock(3000)) return { ok: false, code: "busy" };
   try {
     const sheet = SpreadsheetApp.openById(properties.getProperty("SPREADSHEET_ID")).getSheetByName(SHEET_NAME);
+    migrateSheet_(sheet);
     const lastRow = sheet.getLastRow();
     const cell = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 1).createTextFinder(record.id).matchEntireCell(true).findNext() : null;
-    const values = [record.id, record.typeCode, record.intent === null ? "" : record.intent, record.revision];
+    const values = [record.id, record.completedAt, record.typeCode, record.animalName,
+      record.intent === null ? "" : record.intent, record.revision];
     if (cell) {
-      const range = sheet.getRange(cell.getRow(), 1, 1, 4);
+      const range = sheet.getRange(cell.getRow(), 1, 1, HEADERS.length);
       const old = range.getValues()[0];
-      if (old[3] > record.revision || (old[3] === record.revision && (old[1] !== values[1] || old[2] !== values[2]))) return { ok: false, code: "conflict" };
-      if (old[3] < record.revision) range.setValues([values]);
+      if (old[5] > record.revision || (old[5] === record.revision && (old[2] !== values[2] || old[3] !== values[3] || old[4] !== values[4]))) return { ok: false, code: "conflict" };
+      if (old[5] < record.revision) range.setValues([values]);
     } else {
       if (lastRow >= 50001) return { ok: false, code: "capacity" };
-      sheet.getRange(lastRow + 1, 1, 1, 4).setValues([values]);
+      sheet.getRange(lastRow + 1, 1, 1, HEADERS.length).setValues([values]);
     }
     SpreadsheetApp.flush();
     return { ok: true, revision: record.revision };
