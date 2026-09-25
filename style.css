@@ -135,6 +135,14 @@ main {
   font-size: 0.8125rem;
 }
 
+.event-title {
+  margin-top: 4px;
+  color: var(--color-accent-dark);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
 .event-catch {
   margin: 4px 0 20px;
   color: var(--color-accent-dark);
