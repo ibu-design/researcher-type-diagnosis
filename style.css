@@ -815,34 +815,6 @@ input:checked ~ .answer-state {
   background: rgb(27 42 39 / 45%);
 }
 
-.confirm-dialog {
-  max-width: 420px;
-  padding: 24px 20px;
-}
-
-.confirm-dialog h2 {
-  margin-bottom: 12px;
-  font-size: 1.125rem;
-  line-height: 1.6;
-}
-
-.confirm-dialog p {
-  font-size: 0.9375rem;
-  line-height: 1.8;
-}
-
-.confirm-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.confirm-actions button {
-  padding-inline: 8px;
-  font-size: 0.875rem;
-}
-
 .dialog-toolbar {
   position: sticky;
   top: 0;

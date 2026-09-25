@@ -6,10 +6,10 @@
     <meta name="description" content="大阪大学まちかね祭「あなたの知らない博士の世界」の研究者タイプ診断。ヒューマンウェアイノベーション学位プログラムのイベントの一部として，9つの質問からあなたの研究スタイルを診断します。" />
     <meta name="theme-color" content="#2f7d73" />
     <title>研究者タイプ診断</title>
-    <link rel="stylesheet" href="style.css?v=interestgate1" />
+    <link rel="stylesheet" href="style.css?v=share1" />
     <script src="config.js?v=humanware-storage1" defer></script>
     <script src="collection.js?v=humanware-storage2" defer></script>
-    <script src="script.js?v=anonymous-stats1" defer></script>
+    <script src="script.js?v=share1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">本文へ</a>
@@ -88,7 +88,8 @@
             <p class="percentage-note">割合は回答得点から換算した傾向の目安です。能力や適性，診断の確率を表すものではありません。</p>
             <p id="result-storage-status" class="storage-status" role="status"></p>
             <button type="button" id="restart-button" class="secondary-button">もう一度診断する</button>
-            <button type="button" id="delete-result-button" class="text-button" hidden>保存結果を削除</button>
+            <button type="button" id="share-result-button" class="secondary-button">友達に結果をシェア</button>
+            <p id="share-status" class="storage-status" role="status" aria-live="polite"></p>
           </div>
         </div>
         <section class="venue-section" aria-labelledby="venue-title">
@@ -134,7 +135,7 @@
         <p>掲載している8種類の動物キャラクターのイラストは，Adobeの生成AIツールを使用して作成しています。</p>
         <h3>回答の取り扱い</h3>
         <p>採点はこのブラウザ内で行います。診断が終わると3軸の合計得点をこのブラウザに保存し，同じ端末・ブラウザで再び開いたときに結果を表示します。個々の回答や回答途中の内容は保存しません。</p>
-        <p>保存するのは最新の診断結果1件です。再診断を途中でやめても，前回の結果は残ります。結果画面の「保存結果を削除」から削除できます。共有端末では他の利用者にも結果が表示されるため，利用後に削除してください。</p>
+        <p>保存するのは最新の診断結果1件です。再診断を途中でやめても，前回の結果は残ります。</p>
         <p>別の端末やブラウザには引き継がれません。ブラウザのデータ削除やプライベートブラウズなどにより，結果が失われることがあります。</p>
         <p id="collection-privacy">診断結果のタイプと3軸の得点は，参加意向とともに個人を特定できない形で保存し，会場内の統計表示に利用します。氏名やメールアドレス等の個人情報は収集しません。</p>
         <section aria-labelledby="references-title">
@@ -143,14 +144,6 @@
           <ul id="reference-list" class="reference-list"></ul>
         </section>
       </div>
-    </dialog>
-    <dialog id="delete-result-dialog" class="about-dialog confirm-dialog" aria-labelledby="delete-result-title" aria-describedby="delete-result-description">
-      <h2 id="delete-result-title">保存結果を削除しますか？</h2>
-      <p id="delete-result-description">このブラウザに保存した診断結果を削除します。もう一度診断することはできます。</p>
-      <form method="dialog" class="confirm-actions">
-        <button class="secondary-button" value="cancel" autofocus>キャンセル</button>
-        <button class="primary-button" value="delete">削除する</button>
-      </form>
     </dialog>
   </body>
 </html>

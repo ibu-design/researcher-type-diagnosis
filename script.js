@@ -165,6 +165,7 @@ const references = [
 ];
 
 const resultStorageKey = "researcher-type-diagnosis:result";
+const diagnosisShareUrl = "https://www.hwip.osaka-u.ac.jp/researcher-type-diagnosis/";
 // 質問の意味や採点を変更する場合は更新し，旧版の結果を誤って復元しない。
 const resultStorageVersion = 1;
 
@@ -228,10 +229,37 @@ function writeSavedResult(storage, result) {
   }
 }
 
-function removeSavedResult(storage) {
+function buildShareText(type) {
+  return [
+    `私は「${type.titleJa}（${type.typeCode}）」でした！`,
+    "あなたはどの研究者タイプ？",
+    "研究者タイプ診断",
+    diagnosisShareUrl
+  ].join("\n");
+}
+
+async function copyShareText(text) {
   try {
-    storage.removeItem(resultStorageKey);
-    return true;
+    if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      await Promise.race([
+        navigator.clipboard.writeText(text),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("clipboard-timeout")), 3000))
+      ]);
+      return true;
+    }
+  } catch { /* 古いコピー方法を試す。 */ }
+
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.append(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+    return copied;
   } catch {
     return false;
   }
@@ -257,7 +285,7 @@ function initializeApp() {
   const nextButton = byId("next-button");
   const startButton = byId("start-button");
   const aboutDialog = byId("about-dialog");
-  const deleteDialog = byId("delete-result-dialog");
+  const shareButton = byId("share-result-button");
   const questionOrder = shuffledQuestionOrder();
   const collector = window.createDiagnosisCollector(window.diagnosisConfig?.collectionUrl, storage, updateCollection);
   let displayedType = null;
@@ -381,8 +409,9 @@ function initializeApp() {
       ? "このブラウザに結果を保存しています。"
       : (state.savedResult ? "今回の結果を保存できませんでした。前回の保存結果は残っています。" : "結果を保存できませんでした。ページを閉じるとこの結果は失われます。");
     byId("result-storage-status").classList.toggle("is-error", !saved);
-    byId("delete-result-button").hidden = !state.savedResult;
     byId("saved-result-button").hidden = !state.savedResult;
+    byId("share-status").textContent = "";
+    byId("share-status").classList.remove("is-error");
     document.title = type.titleJa + "（" + type.typeCode + "）| 研究者タイプ診断";
     showScreen("result-screen", "result-title");
   }
@@ -481,26 +510,34 @@ function initializeApp() {
     if (state.savedResult) renderResult(state.savedResult, true);
   });
 
-  byId("delete-result-button").addEventListener("click", () => {
-    deleteDialog.returnValue = "";
-    deleteDialog.showModal();
-    document.body.classList.add("dialog-open");
-  });
-  deleteDialog.addEventListener("close", () => {
-    document.body.classList.remove("dialog-open");
-    if (deleteDialog.returnValue !== "delete") return;
-    if (!removeSavedResult(storage)) {
-      byId("result-storage-status").textContent = "保存結果を削除できませんでした。ブラウザの設定からサイトデータを削除してください。";
-      byId("result-storage-status").classList.add("is-error");
-      return;
+  shareButton.addEventListener("click", async () => {
+    const type = researcherTypes[displayedType];
+    if (!type) return;
+    const text = buildShareText(type);
+    shareButton.disabled = true;
+    byId("share-status").textContent = "";
+    byId("share-status").classList.remove("is-error");
+    try {
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        try {
+          await Promise.race([
+            navigator.share({ title: "研究者タイプ診断", text }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("share-timeout")), 15000))
+          ]);
+          byId("share-status").textContent = "共有画面を開きました。";
+          return;
+        } catch (error) {
+          if (error && error.name === "AbortError") return;
+        }
+      }
+      const copied = await copyShareText(text);
+      byId("share-status").textContent = copied
+        ? "シェア用の文章をコピーしました。"
+        : "シェア用の文章をコピーできませんでした。";
+      byId("share-status").classList.toggle("is-error", !copied);
+    } finally {
+      shareButton.disabled = false;
     }
-    state.savedResult = null;
-    state.answers.fill(null);
-    state.questionIndex = 0;
-    byId("saved-result-button").hidden = true;
-    startButton.textContent = "診断をはじめる";
-    document.title = "研究者タイプ診断";
-    showScreen("start-screen", "site-title");
   });
 
   document.querySelectorAll("[data-about]").forEach((button) => {

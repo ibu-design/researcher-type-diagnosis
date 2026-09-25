@@ -6,8 +6,8 @@ const vm = require("node:vm");
 
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8"), context);
-const { calculateResult, resultFromScores, readSavedResult, writeSavedResult, removeSavedResult, resultStorageKey, resultStorageVersion } = vm.runInContext(
-  "({ calculateResult, resultFromScores, readSavedResult, writeSavedResult, removeSavedResult, resultStorageKey, resultStorageVersion })", context
+const { calculateResult, resultFromScores, readSavedResult, writeSavedResult, buildShareText, diagnosisShareUrl, resultStorageKey, resultStorageVersion } = vm.runInContext(
+  "({ calculateResult, resultFromScores, readSavedResult, writeSavedResult, buildShareText, diagnosisShareUrl, resultStorageKey, resultStorageVersion })", context
 );
 const plain = value => JSON.parse(JSON.stringify(value));
 const memoryStorage = () => {
@@ -79,7 +79,6 @@ test("storage denial and quota failures do not break scoring", () => {
   for (const storage of [undefined, null, denied]) {
     assert.equal(readSavedResult(storage), null);
     assert.equal(writeSavedResult(storage, result), false);
-    assert.equal(removeSavedResult(storage), false);
   }
   assert.equal(result.typeCode, "IPF");
 });
@@ -93,11 +92,13 @@ test("failed replacement preserves the previous completed result", () => {
   assert.deepEqual(plain(readSavedResult(storage)), plain(previous));
 });
 
-test("deleting results leaves unrelated local storage untouched", () => {
-  const storage = memoryStorage();
-  storage.setItem("unrelated", "keep");
-  writeSavedResult(storage, resultFromScores({ IC: 3, PE: 3, FA: 3 }));
-  assert.equal(removeSavedResult(storage), true);
-  assert.equal(readSavedResult(storage), null);
-  assert.equal(storage.getItem("unrelated"), "keep");
+test("share text contains only public result details and the diagnosis URL", () => {
+  const text = buildShareText({ titleJa: "フクロウタイプ", typeCode: "IPF" });
+  assert.equal(text, [
+    "私は「フクロウタイプ（IPF）」でした！",
+    "あなたはどの研究者タイプ？",
+    "研究者タイプ診断",
+    diagnosisShareUrl
+  ].join("\n"));
+  assert.doesNotMatch(text, /submissionId|匿名|score|Google Sheets/);
 });
