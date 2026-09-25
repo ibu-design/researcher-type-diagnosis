@@ -110,9 +110,10 @@ function saveResponse(record) {
     if (cell) {
       const row = cell.getRow();
       const old = sheet.getRange(row, 1, 1, HEADERS.length).getValues()[0];
-      const sameResult = old[2] === record.typeCode && old[3] === record.icScore && old[4] === record.peScore && old[5] === record.faScore;
-      if (!sameResult) return { ok: false, code: "conflict" };
-      sheet.getRange(row, 7).setValue(record.attendance === null ? "" : record.attendance);
+      const attendance = record.attendance === null ? old[6] : record.attendance;
+      sheet.getRange(row, 1, 1, HEADERS.length).setValues([[
+        old[0], record.submissionId, record.typeCode, record.icScore, record.peScore, record.faScore, attendance || ""
+      ]]);
     } else {
       if (lastRow >= 50001) return { ok: false, code: "capacity" };
       sheet.getRange(lastRow + 1, 1, 1, HEADERS.length).setValues([[

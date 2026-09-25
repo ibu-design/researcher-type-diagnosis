@@ -2,12 +2,20 @@
 
 (() => {
   const key = "researcher-type-diagnosis:collection";
+  const anonymousIdKey = "researcher-type-diagnosis:anonymous-id";
   const typePattern = /^(I|C)(P|E)(F|A)$/;
   const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
   const scoreKeys = ["IC", "PE", "FA"];
 
   function validScores(scores) {
     return scores && scoreKeys.every((key) => Number.isInteger(scores[key]) && scores[key] >= 3 && scores[key] <= 18);
+  }
+
+  function readAnonymousId(storage) {
+    try {
+      const value = storage.getItem(anonymousIdKey);
+      return idPattern.test(value || "") ? value : null;
+    } catch { return null; }
   }
 
   function read(storage) {
@@ -79,7 +87,6 @@
     let record = read(storage);
     let busy = false;
     let persistenceFailed = false;
-    let forceNewSession = false;
 
     function notify(message, error = false, retry = false) {
       onChange({ message, error, retry, busy, attendance: record?.attendance ?? null });
@@ -130,22 +137,26 @@
       enabled: Boolean(url),
       result(result) {
         if (!url || !result || !typePattern.test(result.typeCode) || !validScores(result.scores)) return;
-        const sameResult = !forceNewSession && record && record.typeCode === result.typeCode &&
-          scoreKeys.every((key) => record.scores[key] === result.scores[key]);
-        const next = sameResult ? {
-          ...record,
-          revision: record.revision + 1,
-          syncedRevision: 0
-        } : {
+        let submissionId = record?.submissionId || readAnonymousId(storage);
+        if (!submissionId) {
+          try {
+            submissionId = crypto.randomUUID();
+            storage.setItem(anonymousIdKey, submissionId);
+          } catch {
+            persistenceFailed = true;
+            notify("匿名IDを保存できないため，診断データを送信できません。", true);
+            return;
+          }
+        }
+        const next = {
           version: 2,
-          submissionId: crypto.randomUUID(),
+          submissionId,
           typeCode: result.typeCode,
           scores: { IC: result.scores.IC, PE: result.scores.PE, FA: result.scores.FA },
-          attendance: null,
-          revision: 1,
+          attendance: record?.attendance ?? null,
+          revision: (record?.revision || 0) + 1,
           syncedRevision: 0
         };
-        forceNewSession = false;
         if (persist(next)) sync();
       },
       choose(attendance) {
@@ -153,7 +164,7 @@
         if (record.attendance === attendance && !persistenceFailed) { sync(); return; }
         if (persist({ ...record, attendance, revision: record.revision + 1, syncedRevision: 0 })) sync();
       },
-      newSession() { forceNewSession = true; },
+      newSession() {},
       retry() { sync(); }
     };
   };

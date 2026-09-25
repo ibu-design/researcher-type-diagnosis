@@ -31,7 +31,7 @@ function server() {
       setValue: value => { rows[row - 1][col - 1] = value; }
     })
   };
-  const spreadsheet = { getSheetByName: () => sheet };
+  const spreadsheet = { getSheetByName: () => sheet, getSheets: () => [] };
   const context = vm.createContext({
     PropertiesService: { getScriptProperties: () => ({ getProperty: key => props.get(key), setProperty: (key, value) => props.set(key, value) }) },
     LockService: { getScriptLock: () => ({ tryLock: () => !locked, releaseLock: () => { released++; } }) },
@@ -58,7 +58,7 @@ test('server validates anonymous result fields and scores', () => {
   assert.equal(s.rows.length, 2);
 });
 
-test('server deduplicates submissions and updates only attendance', () => {
+test('server deduplicates submissions and updates the result while preserving attendance', () => {
   const s = server();
   const first = { submissionId: id, typeCode: 'IPF', icScore: 7, peScore: 12, faScore: 16, attendance: null };
   assert.equal(s.save(first).ok, true);
@@ -67,7 +67,8 @@ test('server deduplicates submissions and updates only attendance', () => {
   assert.equal(s.save({ ...first, attendance: 'yes' }).ok, true);
   assert.equal(s.rows.length, 2);
   assert.equal(s.rows[1][6], 'yes');
-  assert.equal(s.save({ ...first, typeCode: 'CEA' }).code, 'conflict');
+  assert.equal(s.save({ ...first, typeCode: 'CEA', icScore: 12, peScore: 7, faScore: 4, attendance: null }).ok, true);
+  assert.deepEqual(s.rows[1].slice(1), [id, 'CEA', 12, 7, 4, 'yes']);
 });
 
 test('server handles closure, lock contention, and write failures', () => {
@@ -158,7 +159,7 @@ test('client sends result fields, then updates the same submission with attendan
   assert.equal(c.statuses.at(-1).attendance, 'yes');
 });
 
-test('a new diagnosis session creates a new submissionId even for the same result', async () => {
+test('a new diagnosis session keeps the browser anonymous ID and updates the same row', async () => {
   const c = client();
   const app = c.make(url);
   app.result(result());
@@ -170,9 +171,11 @@ test('a new diagnosis session creates a new submissionId even for the same resul
   second.complete();
   await tick();
   app.newSession();
-  app.result(result());
+  app.result(result('CEA', { IC: 12, PE: 7, FA: 4 }));
   const third = c.ready();
-  assert.notEqual(third.payload.submissionId, first.payload.submissionId);
+  assert.equal(third.payload.submissionId, first.payload.submissionId);
+  assert.equal(third.payload.typeCode, 'CEA');
+  assert.equal(third.payload.attendance, 'no');
 });
 
 test('attendance selected while the result is sending is queued', async () => {
