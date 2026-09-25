@@ -143,15 +143,34 @@ function buildStats_() {
   const properties = PropertiesService.getScriptProperties();
   const id = properties.getProperty("SPREADSHEET_ID");
   if (!id || properties.getProperty("ACCEPTING") !== "true") return { total: 0, typeCounts, axisCounts, updatedAt: new Date().toISOString() };
-  const sheet = ensureSheet_(SpreadsheetApp.openById(id));
-  const rows = sheet.getLastRow() > 1 ? sheet.getRange(2, 1, sheet.getLastRow() - 1, HEADERS.length).getValues() : [];
-  rows.forEach(row => {
-    const typeCode = row[2];
-    if (TYPE_CODES.indexOf(typeCode) === -1) return;
+  const spreadsheet = SpreadsheetApp.openById(id);
+  const current = ensureSheet_(spreadsheet);
+  const seenIds = new Set();
+  let total = 0;
+
+  function addType_(typeCode, recordId) {
+    if (TYPE_CODES.indexOf(typeCode) === -1 || (recordId && seenIds.has(recordId))) return;
+    if (recordId) seenIds.add(recordId);
     typeCounts[typeCode] += 1;
     axisCounts[typeCode[0]] += 1;
     axisCounts[typeCode[1]] += 1;
     axisCounts[typeCode[2]] += 1;
+    total += 1;
+  }
+
+  const rows = current.getLastRow() > 1 ? current.getRange(2, 1, current.getLastRow() - 1, HEADERS.length).getValues() : [];
+  rows.forEach(row => addType_(row[2], String(row[1] || "")));
+
+  // Keep earlier anonymous responses visible after the schema migration.
+  spreadsheet.getSheets().forEach(sheet => {
+    if (!/^responses_legacy_/.test(sheet.getName()) || sheet.getLastRow() < 2) return;
+    const values = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+    const header = values[0].map(value => String(value).trim());
+    const typeIndex = header.indexOf("type_code");
+    const idIndex = header.indexOf("record_id");
+    if (typeIndex === -1) return;
+    values.slice(1).forEach(row => addType_(String(row[typeIndex] || "").trim(), idIndex === -1 ? "" : String(row[idIndex] || "").trim()));
   });
-  return { total: rows.filter(row => TYPE_CODES.indexOf(row[2]) !== -1).length, typeCounts, axisCounts, updatedAt: new Date().toISOString() };
+
+  return { total, typeCounts, axisCounts, updatedAt: new Date().toISOString() };
 }
