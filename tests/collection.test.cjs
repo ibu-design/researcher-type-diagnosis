@@ -8,71 +8,74 @@ const source = fs.readFileSync(path.join(__dirname, '../collection.js'), 'utf8')
 const backend = fs.readFileSync(path.join(__dirname, '../backend/Code.gs'), 'utf8');
 const url = 'https://script.google.com/macros/s/test-deployment/exec';
 const id = 'd84b1000-354d-4221-9fb0-162cf81d521f';
-const animals = { IPF:'フクロウ', IPA:'キツツキ', IEF:'タコ', IEA:'アライグマ', CPF:'ゾウ', CPA:'ビーバー', CEF:'イルカ', CEA:'カワウソ' };
-const completedAt = '2026-09-17T00:00:00.000Z';
-const plain = x => JSON.parse(JSON.stringify(x));
+const scores = { IC: 7, PE: 12, FA: 16 };
+const plain = value => JSON.parse(JSON.stringify(value));
+const result = (typeCode = 'IPF', values = scores) => ({ typeCode, scores: { ...values } });
 
 function server() {
-  const rows = [['record_id', 'completed_at', 'type_code', 'animal_name', 'attendance', 'revision']];
+  const rows = [['timestamp', 'submissionId', 'typeCode', 'icScore', 'peScore', 'faScore', 'attendance']];
   const props = new Map([['ACCEPTING', 'true'], ['SPREADSHEET_ID', 'private']]);
   let locked = false;
   let released = 0;
   let flushFails = false;
   const sheet = {
     getLastRow: () => rows.length,
-    getLastColumn: () => 6,
+    getLastColumn: () => 7,
     getRange: (row, col, length, width) => ({
       createTextFinder: value => ({ matchEntireCell: () => ({ findNext: () => {
-        const index = rows.findIndex((r, i) => i >= row - 1 && r[0] === value);
+        const index = rows.findIndex((current, index) => index >= row - 1 && current[col - 1] === value);
         return index < 0 ? null : { getRow: () => index + 1 };
       } }) }),
-      getValues: () => [rows[row - 1].slice()],
-      setValues: values => { rows[row - 1] = plain(values[0]); }
+      getValues: () => rows.slice(row - 1, row - 1 + length).map(current => current.slice()),
+      setValues: values => { rows[row - 1] = plain(values[0]); },
+      setValue: value => { rows[row - 1][col - 1] = value; }
     })
   };
+  const spreadsheet = { getSheetByName: () => sheet };
   const context = vm.createContext({
-    PropertiesService: { getScriptProperties: () => ({ getProperty: key => props.get(key) }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: key => props.get(key), setProperty: (key, value) => props.set(key, value) }) },
     LockService: { getScriptLock: () => ({ tryLock: () => !locked, releaseLock: () => { released++; } }) },
-    SpreadsheetApp: { openById: () => ({ getSheetByName: () => sheet }), flush: () => { if (flushFails) throw Error('unavailable'); } }
+    SpreadsheetApp: { openById: () => spreadsheet, flush: () => { if (flushFails) throw Error('unavailable'); } },
+    ContentService: { createTextOutput: value => ({ value, setMimeType: () => ({ value }) }), MimeType: { JSON: 'json', JAVASCRIPT: 'javascript' } },
+    Utilities: { formatDate: () => '' },
+    console
   });
   vm.runInContext(backend, context);
-  return { rows, props, context, save: record => plain(context.saveResponse(record)),
-    lock: () => { locked = true; }, fail: () => { flushFails = true; }, releases: () => released };
+  return {
+    rows, props, context, save: record => plain(context.saveResponse(record)),
+    lock: () => { locked = true; }, fail: () => { flushFails = true; }, releases: () => released
+  };
 }
 
-test('server accepts only the four fields and the eight types, never formulas or extra personal data', () => {
+test('server validates anonymous result fields and scores', () => {
   const s = server();
-  for (const typeCode of ['IPF','IPA','IEF','IEA','CPF','CPA','CEF','CEA']) {
-    assert.equal(s.save({id, typeCode, animalName: animals[typeCode], completedAt, intent: null, revision: s.rows[1]?.[5] + 1 || 1}).ok, true);
-  }
-  const valid = {id, typeCode:'IPF', animalName:animals.IPF, completedAt, intent:'yes', revision:20};
-  for (const bad of [null, {}, {...valid,email:'private'}, {...valid,typeCode:'=IMPORTXML("x")'}, {...valid,id:'x'},
-    {...valid,intent:'maybe'}, {...valid,revision:0}, {...valid,revision:1.5}, {...valid,revision:1000000001}]) {
-    assert.equal(s.save(bad).ok, false);
-  }
+  const valid = { submissionId: id, typeCode: 'IPF', icScore: 7, peScore: 12, faScore: 16, attendance: null };
+  assert.equal(s.save(valid).ok, true);
+  for (const bad of [
+    null, {}, { ...valid, email: 'private' }, { ...valid, typeCode: 'BAD' }, { ...valid, submissionId: 'x' },
+    { ...valid, attendance: 'maybe' }, { ...valid, icScore: 2 }, { ...valid, peScore: 19 }, { ...valid, faScore: 1.5 }
+  ]) assert.equal(s.save(bad).ok, false);
   assert.equal(s.rows.length, 2);
 });
 
-test('server deduplicates retries, updates the same row, rejects stale or conflicting writes', () => {
+test('server deduplicates submissions and updates only attendance', () => {
   const s = server();
-  const first = { id, typeCode:'IPF', animalName:animals.IPF, completedAt, intent:null, revision:1 };
+  const first = { submissionId: id, typeCode: 'IPF', icScore: 7, peScore: 12, faScore: 16, attendance: null };
   assert.equal(s.save(first).ok, true);
   assert.equal(s.save(first).ok, true);
   assert.equal(s.rows.length, 2);
-  assert.equal(s.rows[1][4], '');
-  assert.equal(s.save({...first,intent:'yes',revision:2}).ok, true);
-  assert.equal(s.save({...first,typeCode:'CEA',animalName:'カワウソ',intent:'no',revision:3}).ok, true);
-  assert.equal(s.save(first).code, 'conflict');
-  assert.equal(s.save({...first,revision:3}).code, 'conflict');
-  assert.deepEqual(s.rows[1], [id,completedAt,'CEA','カワウソ','no',3]);
+  assert.equal(s.save({ ...first, attendance: 'yes' }).ok, true);
+  assert.equal(s.rows.length, 2);
+  assert.equal(s.rows[1][6], 'yes');
+  assert.equal(s.save({ ...first, typeCode: 'CEA' }).code, 'conflict');
 });
 
-test('server handles closure and lock contention, always releases its acquired lock', () => {
-  const record = {id,typeCode:'IPF',animalName:animals.IPF,completedAt,intent:null,revision:1};
+test('server handles closure, lock contention, and write failures', () => {
+  const record = { submissionId: id, typeCode: 'IPF', icScore: 7, peScore: 12, faScore: 16, attendance: null };
   const s = server();
-  s.props.set('ACCEPTING','false');
+  s.props.set('ACCEPTING', 'false');
   assert.equal(s.save(record).code, 'closed');
-  s.props.set('ACCEPTING','true');
+  s.props.set('ACCEPTING', 'true');
   s.fail();
   assert.throws(() => s.save(record));
   assert.equal(s.releases(), 1);
@@ -81,113 +84,112 @@ test('server handles closure and lock contention, always releases its acquired l
   assert.equal(s.releases(), 1);
 });
 
+test('server returns aggregate statistics without individual rows', () => {
+  const s = server();
+  s.save({ submissionId: id, typeCode: 'IPF', icScore: 7, peScore: 12, faScore: 16, attendance: null });
+  s.save({ submissionId: 'd84b1000-354d-4221-9fb0-162cf81d5222', typeCode: 'CEA', icScore: 12, peScore: 7, faScore: 4, attendance: 'no' });
+  const stats = s.context.buildStats_();
+  assert.equal(stats.total, 2);
+  assert.equal(stats.typeCounts.IPF, 1);
+  assert.equal(stats.typeCounts.CEA, 1);
+  assert.deepEqual(plain(stats.axisCounts), { I: 1, C: 1, P: 1, E: 1, F: 1, A: 1 });
+  assert.equal(Object.hasOwn(stats, 'submissionId'), false);
+});
+
+test('server parses sendBeacon form bodies', () => {
+  const s = server();
+  const record = { submissionId: id, typeCode: 'IPF', icScore: 7, peScore: 12, faScore: 16, attendance: 'yes' };
+  const body = 'mode=save&record=' + encodeURIComponent(JSON.stringify(record));
+  assert.deepEqual(plain(s.context.parseRecord_({ postData: { contents: body } })), record);
+});
+
 function client(initial = null, deny = false) {
   const map = new Map(initial ? [['researcher-type-diagnosis:collection', JSON.stringify(initial)]] : []);
   const frames = [];
   const timers = new Set();
   const statuses = [];
-  const listeners = new Set();
-  const window = {
-    addEventListener: (type, listener) => { if (type === 'message') listeners.add(listener); },
-    removeEventListener: (type, listener) => { if (type === 'message') listeners.delete(listener); }
-  };
   const storage = {
     getItem: key => map.get(key) || null,
-    setItem: (key, value) => { if (deny) throw Error('denied'); map.set(key,value); }
+    setItem: (key, value) => { if (deny) throw Error('denied'); map.set(key, value); }
   };
-  const context = vm.createContext({window, URL, crypto:webcrypto,
-    document:{createElement:() => ({remove(){this.removed=true;}}),body:{append:frame=>frames.push(frame)}},
-    setTimeout: fn => {timers.add(fn);return fn;}, clearTimeout: fn => timers.delete(fn)
+  const context = vm.createContext({
+    window: {}, URL, crypto: webcrypto, navigator: {}, Blob: undefined,
+    document: { createElement: () => ({ remove() { this.removed = true; } }), body: { append: frame => frames.push(frame) } },
+    setTimeout: fn => { timers.add(fn); return fn; }, clearTimeout: fn => timers.delete(fn)
   });
-  vm.runInContext(source,context);
-  const make = endpoint => window.createDiagnosisCollector(endpoint,storage,s=>statuses.push(plain(s)));
+  vm.runInContext(source, context);
+  const make = endpoint => context.window.createDiagnosisCollector(endpoint, storage, status => statuses.push(plain(status)));
   function ready(frame = frames.at(-1)) {
     const request = new URL(frame.src);
-    const payload = JSON.parse(request.searchParams.get('record'));
-    return {payload, ack: (ok=true,code) => {
-      const channel = request.searchParams.get('channel');
-      for (const listener of listeners) listener({data:{kind:'saved',channel,ok,code,revision:payload.revision}});
-    }};
+    return { payload: JSON.parse(request.searchParams.get('record')), complete: () => frame.onload() };
   }
-  return {make,frames,statuses,ready,map,timers};
+  return { make, frames, statuses, ready, map, timers };
 }
-const tick = () => new Promise(resolve=>setImmediate(resolve));
+
+const tick = () => new Promise(resolve => setImmediate(resolve));
 
 test('unconfigured or untrusted endpoint never sends data', () => {
   const c = client();
-  for (const value of ['', 'https://evil.example/exec', url+'?extra=1',url.replace('/exec','/dev')]) {
-    const app=c.make(value);
-    assert.equal(app.enabled,false);
-    app.result('IPF',true);
-    app.choose('IPF','yes');
+  for (const value of ['', 'https://evil.example/exec', url + '?extra=1', url.replace('/exec', '/dev')]) {
+    const app = c.make(value);
+    assert.equal(app.enabled, false);
+    app.result(result());
+    app.choose('yes');
   }
-  assert.equal(c.frames.length,0);
+  assert.equal(c.frames.length, 0);
 });
 
-test('client sends minimum fields, waits for server acknowledgement, changes and restores intent', async () => {
+test('client sends result fields, then updates the same submission with attendance', async () => {
   const c = client();
   const app = c.make(url);
-  app.result('IPF',true);
-  assert.equal(c.statuses.at(-1).busy,true);
-  const first=c.ready();
-  assert.deepEqual(Object.keys(first.payload).sort(),['id','intent','revision','typeCode']);
-  assert.equal(first.payload.intent,null);
-  first.ack(); await tick();
-  assert.equal(c.statuses.at(-1).busy,false);
-  app.choose('IPF','yes');
-  const second=c.ready();
-  assert.equal(second.payload.id,first.payload.id);
-  assert.equal(second.payload.revision,2);
-  second.ack(); await tick();
-  assert.equal(c.statuses.at(-1).intent,'yes');
-  app.choose('IPF','yes');
-  assert.equal(c.frames.length,2);
-  const restored=c.make(url);
-  restored.result('IPF',false);
-  assert.equal(c.frames.length,2);
-  restored.choose('IPF','no');
-  const third=c.ready(); third.ack(); await tick();
-  assert.equal(c.statuses.at(-1).intent,'no');
+  app.result(result());
+  const first = c.ready();
+  assert.deepEqual(Object.keys(first.payload).sort(), ['attendance', 'faScore', 'icScore', 'peScore', 'submissionId', 'typeCode']);
+  assert.equal(first.payload.attendance, null);
+  first.complete();
+  await tick();
+  assert.equal(c.statuses.at(-1).busy, false);
+  app.choose('yes');
+  const second = c.ready();
+  assert.equal(second.payload.submissionId, first.payload.submissionId);
+  assert.equal(second.payload.attendance, 'yes');
+  second.complete();
+  await tick();
+  assert.equal(c.statuses.at(-1).attendance, 'yes');
 });
 
-test('client includes the animal name and completion time in a completed result', () => {
-  const c = client(); const app = c.make(url);
-  app.result('IPF', true, {animalName:'フクロウ', completedAt});
-  const payload = c.ready().payload;
-  assert.equal(payload.animalName, 'フクロウ');
-  assert.equal(payload.completedAt, completedAt);
+test('a new diagnosis session creates a new submissionId even for the same result', async () => {
+  const c = client();
+  const app = c.make(url);
+  app.result(result());
+  const first = c.ready();
+  first.complete();
+  await tick();
+  app.choose('no');
+  const second = c.ready();
+  second.complete();
+  await tick();
+  app.newSession();
+  app.result(result());
+  const third = c.ready();
+  assert.notEqual(third.payload.submissionId, first.payload.submissionId);
 });
 
-test('failed send preserves pending revision for an idempotent retry', async () => {
-  const c=client(); const app=c.make(url);
-  app.result('CEA',true);
-  const first=c.ready(); first.ack(false); await tick();
-  assert.equal(c.statuses.at(-1).retry,true);
-  app.retry();
-  const retry=c.ready();
-  assert.deepEqual(retry.payload,first.payload);
-  retry.ack(); await tick();
-  assert.equal(c.statuses.at(-1).error,false);
+test('attendance selected while the result is sending is queued', async () => {
+  const c = client();
+  const app = c.make(url);
+  app.result(result());
+  app.choose('yes');
+  assert.equal(c.frames.length, 1);
+  c.ready().complete();
+  await tick();
+  assert.equal(c.frames.length, 2);
+  assert.equal(c.ready().payload.attendance, 'yes');
 });
 
-test('storage denial, old results, and malformed saved records do not silently send', () => {
-  const c=client(null,true); c.make(url).result('IPF',true);
-  assert.equal(c.frames.length,0);
-  assert.equal(c.statuses.at(-1).error,true);
-  const old=client(); old.make(url).result('IPF',false);
-  assert.equal(old.frames.length,0);
-  const corrupt=client({version:1,id,typeCode:'IPF',intent:'yes',revision:-1,syncedRevision:0});
-  corrupt.make(url).result('IPF',false);
-  assert.equal(corrupt.frames.length,0);
-});
-
-test('a new completed result during a request is sent after the first acknowledgement', async () => {
-  const c=client(); const app=c.make(url);
-  app.result('IPF',true); const first=c.ready();
-  app.result('CEA',true); first.ack(); await tick();
-  assert.equal(c.frames.length,2);
-  const second=c.ready();
-  assert.equal(second.payload.typeCode,'CEA');
-  second.ack(); await tick();
-  assert.equal(c.statuses.at(-1).error,false);
+test('storage denial does not silently send', () => {
+  const c = client(null, true);
+  c.make(url).result(result());
+  assert.equal(c.frames.length, 0);
+  assert.equal(c.statuses.at(-1).error, true);
 });

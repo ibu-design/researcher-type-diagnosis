@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#173f45" />
+    <title>研究者タイプ診断｜会場用統計</title>
+    <link rel="stylesheet" href="stats.css" />
+    <script src="config.js" defer></script>
+    <script src="stats.js" defer></script>
+  </head>
+  <body>
+    <header class="stats-header">
+      <p class="event-label">大阪大学まちかね祭</p>
+      <p class="event-catch">あなたの知らない博士の世界</p>
+      <h1>研究者タイプ診断</h1>
+      <p class="live-label"><span aria-hidden="true"></span>会場ライブ統計</p>
+    </header>
+
+    <main>
+      <section class="overview" aria-labelledby="overview-title">
+        <div>
+          <p class="section-kicker">TODAY'S DISCOVERY</p>
+          <h2 id="overview-title">みんなの研究スタイル</h2>
+          <p class="overview-copy">診断に参加したみなさんの傾向を、リアルタイムで紹介しています。</p>
+        </div>
+        <div class="total-display" aria-live="polite">
+          <span id="total-count" class="total-count">--</span>
+          <span class="total-unit">人</span>
+          <p id="updated-at" class="updated-at">集計データを読み込み中</p>
+        </div>
+      </section>
+
+      <section class="stats-section" aria-labelledby="types-title">
+        <div class="section-heading">
+          <p class="section-kicker">8 TYPES</p>
+          <h2 id="types-title">研究者タイプの分布</h2>
+        </div>
+        <div class="type-layout">
+          <div class="donut-wrap">
+            <div id="type-donut" class="donut-chart" role="img" aria-label="8タイプの分布">
+              <div class="donut-hole"><strong id="type-donut-total">--</strong><span>人</span></div>
+            </div>
+          </div>
+          <div id="type-legend" class="type-legend"></div>
+        </div>
+      </section>
+
+      <section class="stats-section" aria-labelledby="axes-title">
+        <div class="section-heading">
+          <p class="section-kicker">3 AXES</p>
+          <h2 id="axes-title">3つの軸の分布</h2>
+        </div>
+        <div id="axis-grid" class="axis-grid"></div>
+      </section>
+
+      <p id="stats-status" class="stats-status" role="status" aria-live="polite">統計データを読み込み中です。</p>
+    </main>
+
+    <footer class="stats-footer">
+      <img src="assets/images/logo.png" width="240" height="90" alt="ヒューマンウェアイノベーション学位プログラム" />
+      <p>表示は数秒ごとに更新されます。個人を特定できる情報は表示していません。</p>
+    </footer>
+  </body>
+</html>

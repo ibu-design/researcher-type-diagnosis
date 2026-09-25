@@ -264,7 +264,7 @@ function initializeApp() {
   let pendingResult = null;
   if (collector.enabled) {
     byId("collection-notice").hidden = false;
-    byId("collection-privacy").textContent = "診断完了時にタイプを，参加意向への回答時にその選択を，主催者の非公開Googleスプレッドシートに保存します。氏名・メールアドレス・個々の回答・軸の得点は送信しません。重複防止用のランダムな識別子と更新番号を使用します。同じブラウザでは最新の内容に更新しますが，別端末等の重複を完全には防げないため，実人数ではなく集計件数として扱います。個別データや集計値を本サイトで公開することはありません。タイプ別の集計結果は会場で紹介予定です。端末内の保存結果を削除しても，送信済みの記録や集計用の識別子・送信状態は削除されません。";
+    byId("collection-privacy").textContent = "診断結果のタイプと3軸の得点を，参加意向とともに匿名で保存し，会場の統計表示に利用します。氏名・メールアドレス・個々の回答は収集しません。診断結果ごとにランダムな識別子を使用し，個別データや集計値を本サイトで公開することはありません。タイプ別の集計結果は会場で紹介予定です。";
   }
 
   function updateCollection(status) {
@@ -273,8 +273,8 @@ function initializeApp() {
     byId("collection-status").classList.toggle("is-error", status.error);
     byId("collection-retry").hidden = !status.retry;
     document.querySelectorAll("[data-interest]").forEach((button) => {
-      button.disabled = status.busy;
-      button.setAttribute("aria-pressed", String(button.dataset.interest === status.intent));
+      button.disabled = false;
+      button.setAttribute("aria-pressed", String(button.dataset.interest === status.attendance));
     });
   }
   document.querySelectorAll("[data-interest]").forEach((button) => {
@@ -282,10 +282,7 @@ function initializeApp() {
       if (!pendingResult) return;
       const pending = pendingResult;
       pendingResult = null;
-      collector.choose(pending.result.typeCode, button.dataset.interest, {
-        animalName: researcherTypes[pending.result.typeCode].animalName,
-        completedAt: pending.completedAt
-      });
+      collector.choose(button.dataset.interest);
       renderResult(pending.result, pending.saved, false);
     });
   });
@@ -388,7 +385,6 @@ function initializeApp() {
     byId("saved-result-button").hidden = !state.savedResult;
     document.title = type.titleJa + "（" + type.typeCode + "）| 研究者タイプ診断";
     showScreen("result-screen", "result-title");
-    collector.result(result.typeCode, completed);
   }
 
   Object.values(researcherTypes).forEach((type) => {
@@ -447,7 +443,8 @@ function initializeApp() {
       const result = calculateResult(state.answers);
       const saved = writeSavedResult(storage, result);
       if (saved) state.savedResult = result;
-      pendingResult = { result, saved, completedAt: new Date().toISOString() };
+      collector.result(result);
+      pendingResult = { result, saved };
       byId("collection-status").hidden = true;
       byId("collection-retry").hidden = true;
       document.querySelectorAll("[data-interest]").forEach((button) => {
@@ -475,6 +472,7 @@ function initializeApp() {
   byId("restart-button").addEventListener("click", () => {
     state.answers.fill(null);
     state.questionIndex = 0;
+    collector.newSession();
     startButton.textContent = "診断をはじめる";
     renderQuestion();
   });

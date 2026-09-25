@@ -4,18 +4,28 @@
   const key = "researcher-type-diagnosis:collection";
   const typePattern = /^(I|C)(P|E)(F|A)$/;
   const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  const scoreKeys = ["IC", "PE", "FA"];
+
+  function validScores(scores) {
+    return scores && scoreKeys.every((key) => Number.isInteger(scores[key]) && scores[key] >= 3 && scores[key] <= 18);
+  }
 
   function read(storage) {
     try {
       const value = JSON.parse(storage.getItem(key));
-      if (!value || value.version !== 1 || !idPattern.test(value.id) ||
-          !typePattern.test(value.typeCode) || ![null, "yes", "no"].includes(value.intent) ||
+      if (!value || value.version !== 2 || !idPattern.test(value.submissionId) || !typePattern.test(value.typeCode) ||
+          !validScores(value.scores) || ![null, "yes", "no"].includes(value.attendance) ||
           !Number.isSafeInteger(value.revision) || value.revision < 1 || value.revision > 1000000000 ||
           !Number.isInteger(value.syncedRevision) || value.syncedRevision < 0 || value.syncedRevision > value.revision) return null;
-      return { version: 1, id: value.id, typeCode: value.typeCode, intent: value.intent,
-        animalName: typeof value.animalName === "string" ? value.animalName : "",
-        completedAt: typeof value.completedAt === "string" ? value.completedAt : "",
-        revision: value.revision, syncedRevision: value.syncedRevision };
+      return {
+        version: 2,
+        submissionId: value.submissionId,
+        typeCode: value.typeCode,
+        scores: { IC: value.scores.IC, PE: value.scores.PE, FA: value.scores.FA },
+        attendance: value.attendance,
+        revision: value.revision,
+        syncedRevision: value.syncedRevision
+      };
     } catch { return null; }
   }
 
@@ -28,38 +38,38 @@
   }
 
   function send(url, record) {
+    const payload = JSON.stringify({
+      submissionId: record.submissionId,
+      typeCode: record.typeCode,
+      icScore: record.scores.IC,
+      peScore: record.scores.PE,
+      faScore: record.scores.FA,
+      attendance: record.attendance
+    });
+    const body = "mode=save&record=" + encodeURIComponent(payload);
+    if (typeof navigator !== "undefined" && navigator.sendBeacon && typeof Blob !== "undefined") {
+      const accepted = navigator.sendBeacon(url, new Blob([body], { type: "application/x-www-form-urlencoded;charset=UTF-8" }));
+      if (accepted) return Promise.resolve();
+    }
     return new Promise((resolve, reject) => {
       const frame = document.createElement("iframe");
       frame.hidden = true;
-      frame.title = "診断データの保存";
+      frame.title = "診断データの送信";
       frame.referrerPolicy = "no-referrer";
-      const channel = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, "0")).join("");
-      let receive;
-      const finish = (error, value) => {
+      let finished = false;
+      const finish = (error) => {
+        if (finished) return;
+        finished = true;
         clearTimeout(timer);
-        window.removeEventListener("message", receive);
         frame.onload = null;
         frame.onerror = null;
         frame.remove();
-        if (error) reject(error); else resolve(value);
+        if (error) reject(error); else resolve();
       };
-      const timer = setTimeout(() => finish(new Error("timeout")), 25000);
-      receive = event => {
-        const data = event.data;
-        if (!data || data.kind !== "saved" || data.channel !== channel) return;
-        if (data.ok !== true || data.revision !== record.revision) {
-          finish(new Error(data.code === "closed" ? "closed" : "save-failed"));
-          return;
-        }
-        finish(null, data);
-      };
-      window.addEventListener("message", receive);
-      // The Apps Script response is an opaque iframe response. Its load event
-      // confirms that the request reached the endpoint even when postMessage
-      // is unavailable in a browser privacy mode.
-      frame.onload = () => finish(null, { kind: "saved", revision: record.revision });
+      const timer = setTimeout(() => finish(new Error("timeout")), 15000);
+      frame.onload = () => finish();
       frame.onerror = () => finish(new Error("network"));
-      frame.src = url + "?channel=" + channel + "&record=" + encodeURIComponent(JSON.stringify(record));
+      frame.src = url + "?mode=save&record=" + encodeURIComponent(payload);
       document.body.append(frame);
     });
   }
@@ -68,12 +78,11 @@
     const url = endpoint(value);
     let record = read(storage);
     let busy = false;
-    let currentType = null;
     let persistenceFailed = false;
+    let forceNewSession = false;
 
     function notify(message, error = false, retry = false) {
-      onChange({ message, error, retry, busy,
-        intent: record && record.typeCode === currentType ? record.intent : null });
+      onChange({ message, error, retry, busy, attendance: record?.attendance ?? null });
     }
 
     function persist(next) {
@@ -89,76 +98,62 @@
       }
     }
 
-    function prepare(typeCode, intent, metadata = {}) {
-      if (!typePattern.test(typeCode)) return false;
-      const previous = read(storage) || record;
-      try {
-        const next = { version: 1, id: previous?.id || crypto.randomUUID(), typeCode,
-          intent: intent === undefined ? (previous?.intent ?? null) : intent,
-          animalName: metadata.animalName || previous?.animalName || "",
-          completedAt: metadata.completedAt || previous?.completedAt || "",
-          revision: (previous?.revision || 0) + 1, syncedRevision: previous?.syncedRevision || 0 };
-        return persist(next);
-      } catch {
-        notify("このブラウザでは診断データを送信できません。診断結果はこの端末だけで利用できます。", true);
-        return false;
-      }
-    }
-
-    async function sync() {
-      if (!url || !record || busy || persistenceFailed || record.typeCode !== currentType) return;
+    function sync() {
+      if (!url || !record || busy || persistenceFailed) return;
       if (record.syncedRevision === record.revision) {
-        notify(record.intent === null ? "診断タイプを保存しました。" : "参加意向を保存しました。ありがとうございます。");
+        notify(record.attendance === null ? "診断結果を送信しました。" : "参加意向を保存しました。ありがとうございます。");
         return;
       }
       busy = true;
-      notify("診断データを保存しています…");
-      const snapshot = { id: record.id, typeCode: record.typeCode, intent: record.intent, revision: record.revision };
-      if (record.animalName && record.completedAt) {
-        snapshot.animalName = record.animalName;
-        snapshot.completedAt = record.completedAt;
-      }
-      try {
-        await send(url, snapshot);
-        if (record.revision === snapshot.revision) {
-          const latest = read(storage);
-          if (latest?.id === record.id && latest.revision === snapshot.revision) {
-            const next = { ...record, syncedRevision: snapshot.revision };
-            try { storage.setItem(key, JSON.stringify(next)); } catch { /* The server write is idempotent. */ }
-            record = next;
-          } else if (latest) record = latest;
+      notify("診断データを送信しています…");
+      const snapshotRevision = record.revision;
+      send(url, record).then(() => {
+        const latest = read(storage);
+        if (latest?.submissionId === record.submissionId && latest.revision === snapshotRevision) {
+          record = { ...latest, syncedRevision: latest.revision };
+          try { storage.setItem(key, JSON.stringify(record)); } catch { /* The next attempt remains idempotent. */ }
+        } else if (latest?.submissionId === record.submissionId && latest.revision >= record.revision) {
+          record = latest;
         }
         busy = false;
-        if (record.revision !== snapshot.revision) {
-          if (record.typeCode === currentType) { sync(); return; }
-          notify("別の診断結果が保存されています。ページを開き直してください。", true);
-          return;
-        }
-        notify(record.intent === null ? "診断タイプを保存しました。" : "参加意向を保存しました。ありがとうございます。");
-      } catch (error) {
+        if (record.syncedRevision !== record.revision) { sync(); return; }
+        notify(record.attendance === null ? "診断結果を送信しました。" : "参加意向を保存しました。ありがとうございます。");
+      }).catch((error) => {
         busy = false;
-        notify(error.message === "closed" ? "現在、参加意向データの受付を停止しています。" :
-          "保存を確認できませんでした。通信状況を確認して、再試行してください。", true, error.message !== "closed");
-      }
+        if (record.revision !== snapshotRevision) { sync(); return; }
+        notify(error.message === "timeout" ? "送信を確認できませんでした。再試行してください。" :
+          "保存を確認できませんでした。通信状況を確認して、再試行してください。", true, true);
+      });
     }
 
     return {
       enabled: Boolean(url),
-      result(typeCode, completed, metadata) {
-        currentType = typeCode;
-        if (!url) return;
-        if (completed && !prepare(typeCode, undefined, metadata)) return;
-        if (!record || record.typeCode !== typeCode) { notify("参加意向への回答が必要です。"); return; }
-        sync();
+      result(result) {
+        if (!url || !result || !typePattern.test(result.typeCode) || !validScores(result.scores)) return;
+        const sameResult = !forceNewSession && record && record.typeCode === result.typeCode &&
+          scoreKeys.every((key) => record.scores[key] === result.scores[key]);
+        const next = sameResult ? {
+          ...record,
+          revision: record.revision + 1,
+          syncedRevision: 0
+        } : {
+          version: 2,
+          submissionId: crypto.randomUUID(),
+          typeCode: result.typeCode,
+          scores: { IC: result.scores.IC, PE: result.scores.PE, FA: result.scores.FA },
+          attendance: null,
+          revision: 1,
+          syncedRevision: 0
+        };
+        forceNewSession = false;
+        if (persist(next)) sync();
       },
-      choose(typeCode, intent, metadata) {
-        if (!url || busy || !["yes", "no"].includes(intent)) return;
-        currentType = typeCode;
-        if (record?.typeCode === typeCode && record.intent === intent &&
-            (!metadata || (record.animalName === metadata.animalName && record.completedAt === metadata.completedAt)) &&
-            !persistenceFailed) { sync(); return; }
-        if (prepare(typeCode, intent, metadata)) sync();
+      choose(attendance) {
+        if (!url || !record || !["yes", "no"].includes(attendance)) return;
+        if (record.attendance === attendance && !persistenceFailed) { sync(); return; }
+        if (persist({ ...record, attendance, revision: record.revision + 1, syncedRevision: 0 })) sync();
       },
+      newSession() { forceNewSession = true; },
       retry() { sync(); }
     };
   };

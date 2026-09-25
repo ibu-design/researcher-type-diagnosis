@@ -1,0 +1,88 @@
+:root {
+  color-scheme: light;
+  --ink: #173f45;
+  --muted: #5f706f;
+  --line: #d9e1dd;
+  --warm: #f5efe5;
+  --paper: #fffdfa;
+  --accent: #2f7d73;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--warm);
+  color: var(--ink);
+  font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+.stats-header {
+  padding: 30px 24px 26px;
+  color: #fff;
+  background: #173f45;
+}
+
+.event-label, .event-catch, .section-kicker, .live-label { margin: 0; }
+.event-label { font-size: .78rem; letter-spacing: .08em; }
+.event-catch { margin-top: 6px; font-size: .95rem; }
+.stats-header h1 { margin: 22px 0 8px; font-size: clamp(1.8rem, 4vw, 3rem); }
+.live-label { display: inline-flex; align-items: center; gap: 7px; color: #d7eee7; font-size: .82rem; }
+.live-label span { width: 8px; height: 8px; border-radius: 50%; background: #9ed66b; }
+
+main { max-width: 1240px; margin: 0 auto; padding: 28px 24px 48px; }
+
+.overview {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px 0 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-kicker { color: var(--accent); font-size: .72rem; font-weight: 700; letter-spacing: .12em; }
+h2 { margin: 8px 0 0; font-size: clamp(1.35rem, 3vw, 2rem); }
+.overview-copy { margin: 10px 0 0; color: var(--muted); }
+.total-display { min-width: 180px; text-align: right; }
+.total-count { font-size: clamp(3.4rem, 8vw, 6rem); font-weight: 700; line-height: .9; font-variant-numeric: tabular-nums; }
+.total-unit { margin-left: 6px; font-size: 1.1rem; font-weight: 700; }
+.updated-at { margin: 12px 0 0; color: var(--muted); font-size: .8rem; }
+
+.stats-section { padding: 34px 0; border-bottom: 1px solid var(--line); }
+.section-heading { margin-bottom: 22px; }
+.type-layout { display: grid; grid-template-columns: minmax(260px, 360px) minmax(0, 1fr); align-items: center; gap: clamp(28px, 6vw, 76px); }
+.donut-wrap { display: grid; place-items: center; }
+.donut-chart, .axis-chart { position: relative; display: grid; place-items: center; border-radius: 50%; }
+.donut-chart { width: min(70vw, 340px); aspect-ratio: 1; }
+.donut-chart::after, .axis-chart::after { content: ""; position: absolute; inset: 22%; border-radius: 50%; background: var(--paper); }
+.donut-hole, .axis-chart-hole { position: relative; z-index: 1; display: grid; place-items: center; line-height: 1; }
+.donut-hole strong { font-size: 2.6rem; }
+.donut-hole span { margin-top: 5px; color: var(--muted); font-size: .8rem; }
+.type-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.type-item { display: flex; align-items: center; gap: 12px; min-height: 78px; padding: 8px 12px; background: var(--paper); border: 1px solid var(--line); }
+.type-item img { width: 48px; height: 60px; object-fit: contain; }
+.type-item h3 { margin: 0; font-size: .9rem; }
+.type-item p { margin: 7px 0 0; color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.type-dot { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; vertical-align: 1px; }
+
+.axis-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.axis-card { padding: 24px 18px 20px; text-align: center; background: var(--paper); border: 1px solid var(--line); }
+.axis-card h3 { margin: 0 0 18px; font-size: 1rem; }
+.axis-chart { width: min(45vw, 180px); aspect-ratio: 1; margin: 0 auto; background: #d9dfdc; }
+.axis-chart::after { inset: 24%; }
+.axis-chart-hole { font-size: .85rem; }
+.axis-values { margin: 18px 0 0; font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stats-status { min-height: 24px; margin: 24px 0 0; color: var(--muted); text-align: center; font-size: .85rem; }
+.stats-footer { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px 24px 32px; color: var(--muted); font-size: .75rem; text-align: center; }
+.stats-footer img { width: 150px; height: auto; object-fit: contain; }
+
+@media (max-width: 720px) {
+  main { padding-inline: 16px; }
+  .overview { align-items: start; flex-direction: column; }
+  .total-display { min-width: 0; text-align: left; }
+  .type-layout { grid-template-columns: 1fr; gap: 28px; }
+  .type-legend { grid-template-columns: 1fr; }
+  .axis-grid { grid-template-columns: 1fr; }
+  .stats-footer { flex-direction: column; gap: 8px; }
+}
