@@ -6,10 +6,10 @@
     <meta name="description" content="大阪大学まちかね祭「あなたの知らない博士の世界」の研究者タイプ診断。ヒューマンウェアイノベーション学位プログラムのイベントの一部として，9つの質問からあなたの研究スタイルを診断します。" />
     <meta name="theme-color" content="#2f7d73" />
     <title>研究者タイプ診断</title>
-    <link rel="stylesheet" href="style.css?v=share1" />
+    <link rel="stylesheet" href="style.css?v=share2" />
     <script src="config.js?v=humanware-storage1" defer></script>
     <script src="collection.js?v=humanware-storage2" defer></script>
-    <script src="script.js?v=share1" defer></script>
+    <script src="script.js?v=share2" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">本文へ</a>
@@ -24,6 +24,7 @@
           <p class="event-catch"><span>あなたの知らない</span><span>博士の世界</span></p>
           <h1 id="site-title" tabindex="-1"><span>研究者タイプ</span><span>診断</span></h1>
           <p class="lead"><span>9つの質問から，</span><span>あなたの研究スタイルを診断します</span></p>
+          <p class="gift-note">診断結果のスクリーンショットを会場でスタッフに見せると，<strong>オリジナルクリアファイルとあなたの診断タイプのステッカー</strong>をお渡しします。</p>
         </div>
         <div id="character-gallery" class="character-gallery" aria-label="8タイプのキャラクター"></div>
         <div class="start-actions">
@@ -90,6 +91,7 @@
             <button type="button" id="restart-button" class="secondary-button">もう一度診断する</button>
             <button type="button" id="share-result-button" class="secondary-button">友達に結果をシェア</button>
             <p id="share-status" class="storage-status" role="status" aria-live="polite"></p>
+            <button type="button" id="home-button" class="text-button">トップページに戻る</button>
           </div>
         </div>
         <section class="venue-section" aria-labelledby="venue-title">
@@ -97,8 +99,7 @@
             <p class="eyebrow">会場でもっと楽しもう</p>
             <h3 id="venue-title">詳しい結果は、会場で。</h3>
             <p>ここでは、あなたのタイプを簡単にご紹介しています。診断結果の詳しい内容は、会場でチェック！</p>
-            <p>共通デザインのオリジナルファイルと、あなたのタイプのステッカーを会場でお渡しします。</p>
-            <p><strong>結果のスクリーンショットを，会場でスタッフに見せてください。</strong></p>
+            <p class="gift-note venue-gift-note"><strong>診断結果のスクリーンショットを会場でスタッフに見せると，オリジナルクリアファイルとあなたの診断タイプのステッカーをお渡しします。</strong></p>
             <p>みなさんの研究者タイプの集計結果も，会場で紹介する予定です。</p>
             <p id="collection-status" class="storage-status" role="status" hidden></p>
             <button id="collection-retry" type="button" class="text-button" hidden>保存を再試行</button>

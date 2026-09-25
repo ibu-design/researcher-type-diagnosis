@@ -286,6 +286,7 @@ function initializeApp() {
   const startButton = byId("start-button");
   const aboutDialog = byId("about-dialog");
   const shareButton = byId("share-result-button");
+  const homeButton = byId("home-button");
   const questionOrder = shuffledQuestionOrder();
   const collector = window.createDiagnosisCollector(window.diagnosisConfig?.collectionUrl, storage, updateCollection);
   let displayedType = null;
@@ -538,6 +539,11 @@ function initializeApp() {
     } finally {
       shareButton.disabled = false;
     }
+  });
+
+  homeButton.addEventListener("click", () => {
+    document.title = "研究者タイプ診断";
+    showScreen("start-screen", "site-title");
   });
 
   document.querySelectorAll("[data-about]").forEach((button) => {
