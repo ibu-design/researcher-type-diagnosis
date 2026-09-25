@@ -111,5 +111,20 @@ function requestStats() {
   document.body.append(script);
 }
 
-requestStats();
-setInterval(requestStats, Math.max(1000, Number(window.diagnosisConfig?.statsPollMs) || 5000));
+function requestStatsJson() {
+  const endpoint = window.diagnosisConfig?.statsUrl;
+  if (!endpoint) return;
+  const url = endpoint + (endpoint.includes("?") ? "&" : "?") + "mode=stats&t=" + Date.now();
+  fetch(url, { cache: "no-store", credentials: "omit" })
+    .then(response => {
+      if (!response.ok) throw new Error("stats request failed");
+      return response.json();
+    })
+    .then(renderStats)
+    .catch(() => {
+      document.getElementById("stats-status").textContent = "統計データを取得できませんでした。";
+    });
+}
+
+requestStatsJson();
+setInterval(requestStatsJson, Math.max(1000, Number(window.diagnosisConfig?.statsPollMs) || 5000));
