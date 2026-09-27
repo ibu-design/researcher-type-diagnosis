@@ -6,8 +6,8 @@ const vm = require("node:vm");
 
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "script.js"), "utf8"), context);
-const { calculateResult, resultFromScores, readSavedResult, writeSavedResult, buildShareText, diagnosisShareUrl, resultStorageKey, resultStorageVersion } = vm.runInContext(
-  "({ calculateResult, resultFromScores, readSavedResult, writeSavedResult, buildShareText, diagnosisShareUrl, resultStorageKey, resultStorageVersion })", context
+const { calculateResult, resultFromScores, readSavedResult, writeSavedResult, buildShareText, buildTypeSummary, diagnosisShareUrl, resultStorageKey, resultStorageVersion } = vm.runInContext(
+  "({ calculateResult, resultFromScores, readSavedResult, writeSavedResult, buildShareText, buildTypeSummary, diagnosisShareUrl, resultStorageKey, resultStorageVersion })", context
 );
 const plain = value => JSON.parse(JSON.stringify(value));
 const memoryStorage = () => {
@@ -101,4 +101,11 @@ test("share text contains only public result details and the diagnosis URL", () 
     diagnosisShareUrl
   ].join("\n"));
   assert.doesNotMatch(text, /submissionId|匿名|score|Google Sheets/);
+});
+
+test("type summary names the result type and summarizes its research style", () => {
+  assert.equal(
+    buildTypeSummary({ titleJa: "アライグマタイプ", description: "まず試してみて，うまくいく方法を実用につなげる" }),
+    "アライグマタイプは、まず試してみて，うまくいく方法を実用につなげる。"
+  );
 });

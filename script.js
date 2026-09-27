@@ -238,6 +238,10 @@ function buildShareText(type) {
   ].join("\n");
 }
 
+function buildTypeSummary(type) {
+  return `${type.titleJa}は、${type.description}。`;
+}
+
 async function copyShareText(text) {
   try {
     if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
@@ -371,7 +375,7 @@ function initializeApp() {
     byId("result-title").textContent = type.titleJa;
     byId("result-image").alt = type.animalName + "の研究者キャラクター";
     byId("result-image").src = type.imagePath;
-    byId("result-description").textContent = type.description || "";
+    byId("result-description").textContent = buildTypeSummary(type);
     byId("result-catch").textContent = type.shortCatch || "";
     byId("result-catch").hidden = !type.shortCatch;
     const rows = Object.entries(axes).map(([key, axis], index) => {
