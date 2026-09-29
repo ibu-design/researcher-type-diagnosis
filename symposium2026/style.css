@@ -61,12 +61,14 @@ h1, h2, h3, p, dd { overflow-wrap: anywhere; }
   place-items: center;
   padding: 76px 20px;
   color: var(--white);
-  background: var(--blue) url("assets/flyer-front.png") center 28% / cover no-repeat;
+  background: var(--blue);
 }
-.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: rgb(5 42 107 / 76%); }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: rgb(5 42 107 / 18%); }
 .hero::after { content: ""; position: absolute; right: 5%; bottom: 12%; width: 170px; height: 18px; background: var(--yellow); transform: rotate(-4deg); opacity: .9; z-index: -1; }
 .hero-content { width: min(100%, 900px); text-align: center; }
 .hero-kicker { margin-bottom: 12px; color: var(--yellow); font-weight: 700; }
+.hero-brand { display: inline-flex; margin: 0 auto 18px; padding: 7px 18px; border-radius: 4px; background: var(--white); }
+.hero-brand img { width: 150px; height: 48px; object-fit: contain; }
 .hero h1 { font-size: clamp(2rem, 7vw, 4.75rem); line-height: 1.2; letter-spacing: .02em; }
 .hero-lead { margin-top: 16px; font-size: clamp(1.25rem, 4vw, 2.25rem); font-weight: 800; line-height: 1.45; }
 .hero-facts { display: flex; justify-content: center; gap: 28px; margin: 38px auto 0; padding: 20px 0; border-block: 1px solid rgb(255 255 255 / 55%); }
@@ -160,7 +162,7 @@ td { color: var(--ink); font-weight: 700; }
   .site-nav { position: absolute; top: 100%; left: 0; right: 0; display: none; padding: 12px 20px 18px; border-bottom: 1px solid var(--line); background: var(--white); }
   .site-nav.is-open { display: grid; gap: 0; }
   .site-nav a { padding: 11px 0; border-bottom: 1px solid var(--line); }
-  .hero { min-height: 620px; padding-block: 64px; background-position: center top; }
+  .hero { min-height: 620px; padding-block: 64px; }
   .hero-facts { display: grid; gap: 15px; margin-top: 30px; }
   .hero-facts p { text-align: center; }
   .hero-badges { flex-wrap: wrap; }
