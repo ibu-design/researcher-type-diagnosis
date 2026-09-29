@@ -64,7 +64,6 @@ h1, h2, h3, p, dd { overflow-wrap: anywhere; }
   background: var(--blue);
 }
 .hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: rgb(5 42 107 / 18%); }
-.hero::after { content: ""; position: absolute; right: 5%; bottom: 12%; width: 170px; height: 18px; background: var(--yellow); transform: rotate(-4deg); opacity: .9; z-index: -1; }
 .hero-content { width: min(100%, 900px); text-align: center; }
 .hero-kicker { margin-bottom: 12px; color: var(--yellow); font-weight: 700; }
 .hero-brand { display: inline-flex; margin: 0 auto 18px; padding: 7px 18px; border-radius: 4px; background: var(--white); }
@@ -139,7 +138,7 @@ td { color: var(--ink); font-weight: 700; }
 .access-layout > div > p:not(.eyebrow):not(.access-place) { margin-top: 18px; color: var(--muted); }
 .text-link, .contact-mail { display: inline-block; margin-top: 22px; color: var(--blue); font-weight: 800; text-underline-offset: 4px; }
 .access-map { overflow: hidden; border: 1px solid var(--line); background: var(--white); }
-.access-map img { width: 100%; height: 330px; object-fit: cover; object-position: center bottom; }
+.access-map img { display: block; width: 100%; height: auto; object-fit: contain; }
 .access-map figcaption { padding: 8px 12px; color: var(--muted); font-size: .72rem; }
 
 .contact-section { padding: 78px 20px 94px; text-align: center; }
@@ -181,7 +180,6 @@ td { color: var(--ink); font-weight: 700; }
   .speaker-role, .speaker-card div > p:last-child { font-size: .73rem; }
   th { width: 118px; font-size: .9rem; }
   td { font-size: .88rem; }
-  .access-map img { height: 250px; }
   .footer-inner { flex-wrap: wrap; }
   .footer-inner p:first-of-type { margin-left: 0; width: 100%; }
 }
