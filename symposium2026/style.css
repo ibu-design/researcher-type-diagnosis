@@ -96,6 +96,7 @@ section { scroll-margin-top: 80px; }
 .cta-button span { font-size: 1.25rem; }
 
 .gift-section { padding: 78px 20px; background: var(--white); }
+.gift-section .eyebrow { color: #c52f3b; font-size: clamp(2.25rem, 8vw, 3rem); line-height: 1.15; letter-spacing: 0; }
 .gift-section .section-heading { max-width: 760px; margin-inline: auto; }
 .gift-section .section-heading > p:last-child { margin-top: 12px; color: var(--muted); }
 .gift-visuals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; max-width: 880px; margin: 38px auto 0; }
@@ -185,7 +186,7 @@ td { color: var(--ink); font-weight: 700; }
   .overview-list, .schedule-table-wrap, .access-layout > .access-map { margin-top: 30px; }
   .overview-list > div { grid-template-columns: 92px minmax(0, 1fr); gap: 14px; }
   .program-grid, .speaker-grid { grid-template-columns: 1fr; }
-  .gift-visuals { grid-template-columns: 1fr; max-width: 460px; }
+  .gift-visuals { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 460px; }
   .program-card { min-height: 0; }
   .speaker-card, .speaker-card-last { max-width: none; grid-column: auto; justify-self: stretch; grid-template-columns: 88px minmax(0, 1fr); gap: 14px; padding: 18px; }
   .speaker-card img { width: 88px; height: 105px; }
