@@ -190,65 +190,48 @@ main {
   text-decoration-thickness: 2px;
 }
 
-.file-showcase {
-  max-width: 680px;
-  margin: 34px auto 0;
-  padding: 24px 16px 20px;
+.venue-file-showcase {
+  margin-top: 18px;
+  padding: 14px;
   border: 1px solid #eadfca;
   background: #fffaf0;
+}
+
+.venue-file-showcase-title {
+  margin: 0 0 10px;
+  color: var(--color-accent-dark);
+  font-size: 0.9375rem;
+  font-weight: 800;
   text-align: center;
 }
 
-.file-showcase .eyebrow {
-  margin-bottom: 8px;
-  color: #c52f3b;
-  font-size: clamp(2.25rem, 9vw, 3.5rem);
-  line-height: 1.15;
-  letter-spacing: 0;
-}
-
-.file-showcase h2 {
-  font-size: 1.25rem;
-  line-height: 1.5;
-}
-
-.file-showcase > p:not(.eyebrow) {
-  margin: 10px auto 0;
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  line-height: 1.8;
-}
-
-.file-showcase-visuals {
+.venue-file-showcase .file-showcase-visuals {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   max-width: 440px;
-  margin: 18px auto 0;
+  margin: 0 auto;
 }
 
-.file-showcase-visuals figure {
+.venue-file-showcase .file-showcase-visuals figure {
   min-width: 0;
   margin: 0;
   border: 1px solid #e5d9c6;
   background: white;
 }
 
-.file-showcase-visuals img {
+.venue-file-showcase .file-showcase-visuals img {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.file-showcase-visuals figcaption {
+.venue-file-showcase .file-showcase-visuals figcaption {
   padding: 5px 4px;
   color: var(--color-muted);
   font-size: 0.75rem;
   font-weight: 700;
-}
-
-.file-showcase-note {
-  font-size: 0.8125rem !important;
+  text-align: center;
 }
 
 .eyebrow {
