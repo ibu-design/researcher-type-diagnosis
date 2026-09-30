@@ -85,6 +85,7 @@ section { scroll-margin-top: 80px; }
 
 .diagnosis-section { padding: 76px 20px 82px; text-align: center; }
 .diagnosis-section .section-heading { max-width: 700px; margin-inline: auto; }
+.diagnosis-section .eyebrow { font-size: 1rem; letter-spacing: .06em; }
 .diagnosis-section .section-heading > p:last-child { color: var(--muted); }
 .character-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 12px; max-width: 900px; margin: 42px auto 34px; }
 .character-grid figure { min-width: 0; }
@@ -130,6 +131,7 @@ td { color: var(--ink); font-weight: 700; }
 
 .hwip-section { padding: 78px 20px; background: var(--navy); color: var(--white); }
 .hwip-section h2 { color: var(--white); }
+.hwip-link { display: inline-block; margin-top: 14px; color: var(--yellow); font-weight: 800; text-underline-offset: 4px; }
 .hwip-section p:last-child { margin-top: 24px; color: #e3f5fb; line-height: 2; }
 
 .access-section { padding: 78px 0; }
@@ -140,6 +142,7 @@ td { color: var(--ink); font-weight: 700; }
 .access-map { overflow: hidden; border: 1px solid var(--line); background: var(--white); }
 .access-map img { display: block; width: 100%; height: auto; object-fit: contain; }
 .access-map figcaption { padding: 8px 12px; color: var(--muted); font-size: .72rem; }
+.access-visuals { display: grid; gap: 18px; }
 
 .contact-section { padding: 78px 20px 94px; text-align: center; }
 .contact-section p:not(.eyebrow) { margin-top: 20px; color: var(--muted); }
