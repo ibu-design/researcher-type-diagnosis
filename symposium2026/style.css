@@ -128,13 +128,8 @@ section { scroll-margin-top: 80px; }
 .speakers-section { padding: 84px 0; }
 .speaker-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 40px; }
 .speaker-card { display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 22px; padding: 24px; border-top: 4px solid var(--cyan); background: #f8fbff; }
-.speaker-photo { position: relative; width: 118px; height: 118px; margin-top: 0; overflow: hidden; border: 4px solid var(--blue); border-radius: 0; background: #eaf4f8; }
-.speaker-photo img { position: absolute; left: 50%; top: calc(50% + 6px); display: block; width: 110px; height: 110px; max-width: none; object-fit: cover; object-position: center 26%; border: 0; border-radius: 0; transform-origin: center 30%; transform: translate(-50%, -50%) scale(1); }
-.speaker-photo-shimizu img { transform: translate(-50%, -50%) scale(1); }
-.speaker-photo-minami img { transform: translate(-50%, -50%) scale(1); }
-.speaker-photo-kimura img { transform: translate(-50%, -50%) scale(1); }
-.speaker-photo-kumagai img { transform: translate(-50%, -50%) scale(1); }
-.speaker-photo-tsuzuki img { transform: translate(calc(-50% - 3px), calc(-50% + 4px)) scale(1); }
+.speaker-photo { width: 110px; margin-top: 0; }
+.speaker-photo img { display: block; width: 110px; height: auto; max-width: 100%; border: 0; border-radius: 0; }
 .speaker-card h3 { color: var(--navy); font-size: 1.25rem; line-height: 1.4; }
 .speaker-role { margin-top: 8px; color: var(--blue); font-size: .78rem; font-weight: 700; line-height: 1.65; }
 .speaker-card div > p:last-child { margin-top: 14px; color: var(--muted); font-size: .82rem; line-height: 1.9; }
@@ -200,8 +195,8 @@ td { color: var(--ink); font-weight: 700; }
   .gift-visuals { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 460px; }
   .program-card { min-height: 0; }
   .speaker-card, .speaker-card-last { max-width: none; grid-column: auto; justify-self: stretch; grid-template-columns: 88px minmax(0, 1fr); gap: 14px; padding: 18px; }
-  .speaker-photo { width: 88px; height: 88px; }
-  .speaker-photo img { width: 80px; height: 80px; }
+  .speaker-photo { width: 80px; }
+  .speaker-photo img { width: 80px; }
   .speaker-card h3 { font-size: 1.05rem; }
   .speaker-role, .speaker-card div > p:last-child { font-size: .73rem; }
   th { width: 118px; font-size: .9rem; }
