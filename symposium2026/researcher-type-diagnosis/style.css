@@ -868,6 +868,13 @@ input:checked ~ .answer-state {
   box-shadow: 2px 2px 0 rgb(214 169 68 / 22%);
 }
 
+.limited-note {
+  margin: 7px 0 0;
+  color: #9a5a35;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .sticker-note {
   margin: 14px 0 0;
   padding: 10px 12px;
