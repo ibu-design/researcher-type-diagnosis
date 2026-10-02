@@ -40,56 +40,56 @@ const researcherTypes = {
     axis1: "I", axis2: "P", axis3: "F", titleJa: "フクロウタイプ",
     shortCatch: null,
     description: "一人でじっくり考え，見通しを立てながら仕組みを追究する",
-    imagePath: "assets/images/フクロウ.png"
+    imagePath: "../assets/images/フクロウ.png"
   },
   IPA: {
     typeCode: "IPA", animalName: "キツツキ",
     axis1: "I", axis2: "P", axis3: "A", titleJa: "キツツキタイプ",
     shortCatch: null,
     description: "一人で着実に作業し，実際に使えるものを形にする",
-    imagePath: "assets/images/キツツキ.png"
+    imagePath: "../assets/images/キツツキ.png"
   },
   IEF: {
     typeCode: "IEF", animalName: "タコ",
     axis1: "I", axis2: "E", axis3: "F", titleJa: "タコタイプ",
     shortCatch: null,
     description: "自分でいろいろ試しながら，未知の仕組みを探る",
-    imagePath: "assets/images/タコ.png"
+    imagePath: "../assets/images/タコ.png"
   },
   IEA: {
     typeCode: "IEA", animalName: "アライグマ",
     axis1: "I", axis2: "E", axis3: "A", titleJa: "アライグマタイプ",
     shortCatch: null,
     description: "まず試してみて，うまくいく方法を実用につなげる",
-    imagePath: "assets/images/アライグマ.png"
+    imagePath: "../assets/images/アライグマ.png"
   },
   CPF: {
     typeCode: "CPF", animalName: "ゾウ",
     axis1: "C", axis2: "P", axis3: "F", titleJa: "ゾウタイプ",
     shortCatch: null,
     description: "仲間と知識を共有しながら，じっくり筋道を立てて考える",
-    imagePath: "assets/images/ゾウ.png"
+    imagePath: "../assets/images/ゾウ.png"
   },
   CPA: {
     typeCode: "CPA", animalName: "ビーバー",
     axis1: "C", axis2: "P", axis3: "A", titleJa: "ビーバータイプ",
     shortCatch: null,
     description: "仲間と協力して，役立つものを計画的に作る",
-    imagePath: "assets/images/ビーバー.png"
+    imagePath: "../assets/images/ビーバー.png"
   },
   CEF: {
     typeCode: "CEF", animalName: "イルカ",
     axis1: "C", axis2: "E", axis3: "F", titleJa: "イルカタイプ",
     shortCatch: null,
     description: "仲間とアイデアを出し合い，いろいろ試しながら未知を探る",
-    imagePath: "assets/images/イルカ.png"
+    imagePath: "../assets/images/イルカ.png"
   },
   CEA: {
     typeCode: "CEA", animalName: "カワウソ",
     axis1: "C", axis2: "E", axis3: "A", titleJa: "カワウソタイプ",
     shortCatch: null,
     description: "仲間と試行錯誤しながら，使えるアイデアを形にする",
-    imagePath: "assets/images/カワウソ.png"
+    imagePath: "../assets/images/カワウソ.png"
   }
 };
 

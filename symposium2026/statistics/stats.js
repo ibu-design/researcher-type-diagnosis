@@ -1,14 +1,14 @@
 "use strict";
 
 const typeMeta = [
-  ["IPF", "フクロウ", "assets/images/フクロウ.png", "#2f7d73"],
-  ["IPA", "キツツキ", "assets/images/キツツキ.png", "#d66f4d"],
-  ["IEF", "タコ", "assets/images/タコ.png", "#d6a840"],
-  ["IEA", "アライグマ", "assets/images/アライグマ.png", "#6686a6"],
-  ["CPF", "ゾウ", "assets/images/ゾウ.png", "#936b9b"],
-  ["CPA", "ビーバー", "assets/images/ビーバー.png", "#6d9b63"],
-  ["CEF", "イルカ", "assets/images/イルカ.png", "#3b9db0"],
-  ["CEA", "カワウソ", "assets/images/カワウソ.png", "#df8b4c"]
+  ["IPF", "フクロウ", "../assets/images/フクロウ.png", "#2f7d73"],
+  ["IPA", "キツツキ", "../assets/images/キツツキ.png", "#d66f4d"],
+  ["IEF", "タコ", "../assets/images/タコ.png", "#d6a840"],
+  ["IEA", "アライグマ", "../assets/images/アライグマ.png", "#6686a6"],
+  ["CPF", "ゾウ", "../assets/images/ゾウ.png", "#936b9b"],
+  ["CPA", "ビーバー", "../assets/images/ビーバー.png", "#6d9b63"],
+  ["CEF", "イルカ", "../assets/images/イルカ.png", "#3b9db0"],
+  ["CEA", "カワウソ", "../assets/images/カワウソ.png", "#df8b4c"]
 ];
 
 const axisMeta = [
