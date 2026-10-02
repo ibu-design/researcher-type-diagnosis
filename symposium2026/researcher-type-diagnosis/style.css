@@ -836,6 +836,39 @@ input:checked ~ .answer-state {
   line-height: 1.6;
 }
 
+.limited-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 13px;
+  border: 2px solid #c52f3b;
+  border-radius: 5px;
+  background: #fff2b8;
+  color: #9e2631;
+  line-height: 1.2;
+  transform: rotate(-1deg);
+}
+
+.limited-badge strong {
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+
+.limited-badge span {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.limited-badge-gift {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 12px;
+  border-color: #b73b43;
+  background: #fff2b8;
+  color: #96313a;
+  box-shadow: 2px 2px 0 rgb(214 169 68 / 22%);
+}
+
 .sticker-note {
   margin: 14px 0 0;
   padding: 10px 12px;
