@@ -836,6 +836,15 @@ input:checked ~ .answer-state {
   line-height: 1.6;
 }
 
+.sticker-note {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-left: 4px solid #d6a944;
+  color: #8a641c;
+  background: #fff4cf;
+  font-weight: 800;
+}
+
 .event-link {
   display: flex;
   align-items: center;
