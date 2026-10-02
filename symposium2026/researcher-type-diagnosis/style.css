@@ -763,6 +763,46 @@ input:checked ~ .answer-state {
   margin-bottom: 14px;
 }
 
+.venue-lead {
+  margin: -4px 0 18px;
+  color: var(--color-accent-dark);
+  font-weight: 700;
+}
+
+.venue-points {
+  display: grid;
+  gap: 14px;
+}
+
+.venue-point {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #eadfca;
+  background: #fffaf0;
+}
+
+.venue-point-number {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: white;
+  background: var(--color-accent-dark);
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.venue-point-content h4 {
+  margin: 2px 0 8px;
+  color: var(--color-accent-dark);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
 .event-link {
   display: flex;
   align-items: center;
@@ -807,10 +847,6 @@ input:checked ~ .answer-state {
 
 .venue-section p + p {
   margin-top: 12px;
-}
-
-.venue-section .venue-gift-note {
-  margin-top: 18px;
 }
 
 .symposium-interest {
