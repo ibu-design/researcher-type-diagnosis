@@ -1168,10 +1168,6 @@ input:checked ~ .answer-state {
     padding-block: 36px;
   }
 
-  .venue-points {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .about-content {
     padding: 28px 36px 40px;
   }
