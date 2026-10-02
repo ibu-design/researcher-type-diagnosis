@@ -846,7 +846,6 @@ input:checked ~ .answer-state {
   background: #fff2b8;
   color: #9e2631;
   line-height: 1.2;
-  transform: rotate(-1deg);
 }
 
 .limited-badge strong {
