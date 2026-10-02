@@ -771,33 +771,66 @@ input:checked ~ .answer-state {
 
 .venue-points {
   display: grid;
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
 }
 
 .venue-point {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 14px;
-  padding: 18px;
+  min-width: 0;
+  padding: 18px 16px 20px;
   border: 1px solid #eadfca;
+  border-top: 5px solid var(--color-accent);
+  background: #fffaf0;
+  box-shadow: 0 3px 0 rgb(47 125 115 / 10%);
+}
+
+.venue-point:nth-child(2) {
+  border-top-color: #d6a944;
   background: #fffaf0;
 }
 
-.venue-point-number {
+.venue-point:nth-child(3) {
+  border-top-color: #5b8bc5;
+  background: #f4f8ff;
+}
+
+.venue-point-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--color-accent-dark);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.venue-point-label strong {
   display: grid;
   place-items: center;
+  flex: 0 0 auto;
   width: 36px;
   height: 36px;
   border-radius: 50%;
   color: white;
   background: var(--color-accent-dark);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 800;
   line-height: 1;
 }
 
+.venue-point:nth-child(2) .venue-point-label strong {
+  background: #b88724;
+}
+
+.venue-point:nth-child(3) .venue-point-label strong {
+  background: #4777ad;
+}
+
 .venue-point-content h4 {
-  margin: 2px 0 8px;
+  margin: 0 0 8px;
   color: var(--color-accent-dark);
   font-size: 1.0625rem;
   line-height: 1.6;
@@ -1133,6 +1166,10 @@ input:checked ~ .answer-state {
 
   .venue-section {
     padding-block: 36px;
+  }
+
+  .venue-points {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .about-content {
