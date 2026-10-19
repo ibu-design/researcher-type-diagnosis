@@ -58,8 +58,8 @@ h2 { margin: 8px 0 0; font-size: clamp(1.35rem, 3vw, 2rem); }
 .diagnosis-prompt-gift { padding: 16px 18px; border-left: 6px solid #d6a840; background: #fff8df; color: var(--ink) !important; font-size: clamp(1.1rem, 1.9vw, 1.5rem); line-height: 1.55 !important; }
 .diagnosis-prompt-note { color: #9a5a35 !important; font-size: clamp(.85rem, 1.2vw, 1.05rem); font-weight: 700; }
 .diagnosis-prompt-qr { position: relative; display: grid; place-items: center; padding: 14px; background: var(--paper); border: 1px solid var(--line); pointer-events: none; }
-.diagnosis-prompt-qr::before { content: "こちら！"; position: absolute; left: -34px; top: 50%; z-index: 1; padding: 9px 14px; transform: translate(-100%, -50%); border: 2px solid #d6a840; border-radius: 999px; background: #fff8df; color: var(--ink); font-size: clamp(1rem, 1.5vw, 1.3rem); font-weight: 700; white-space: nowrap; }
-.diagnosis-prompt-qr::after { content: ""; position: absolute; left: -42px; top: 50%; z-index: 2; width: 0; height: 0; transform: translateY(-50%); border-top: 14px solid transparent; border-bottom: 14px solid transparent; border-left: 20px solid #d6a840; }
+.diagnosis-prompt-qr::before { content: "こちら！"; position: absolute; left: 50%; top: 0; z-index: 1; padding: 9px 14px; transform: translate(-50%, calc(-100% - 8px)); border: 2px solid #d6a840; border-radius: 999px; background: #fff8df; color: var(--ink); font-size: clamp(1rem, 1.5vw, 1.3rem); font-weight: 700; white-space: nowrap; }
+.diagnosis-prompt-qr::after { content: ""; position: absolute; left: 50%; top: -8px; z-index: 2; width: 0; height: 0; transform: translateX(-50%); border-top: 16px solid #d6a840; border-right: 14px solid transparent; border-left: 14px solid transparent; }
 .diagnosis-prompt-qr span { display: none; }
 .diagnosis-prompt-qr img { display: block; width: min(100%, 280px); height: auto; background: #fff; }
 
@@ -101,7 +101,48 @@ h2 { margin: 8px 0 0; font-size: clamp(1.35rem, 3vw, 2rem); }
   .diagnosis-prompt { grid-template-columns: 1fr; text-align: center; }
   .diagnosis-prompt-gift { text-align: left; }
   .diagnosis-prompt-qr { width: min(100%, 320px); margin-inline: auto; }
-  .diagnosis-prompt-qr::before { left: 50%; top: -18px; transform: translate(-50%, -100%); }
-  .diagnosis-prompt-qr::after { left: 50%; top: -18px; transform: translate(-50%, 0); border-top: 20px solid #d6a840; border-right: 14px solid transparent; border-bottom: 0; border-left: 14px solid transparent; }
+  .diagnosis-prompt-qr::before { left: 50%; top: 0; transform: translate(-50%, calc(-100% - 8px)); }
+  .diagnosis-prompt-qr::after { left: 50%; top: -8px; transform: translateX(-50%); border-top: 16px solid #d6a840; border-right: 14px solid transparent; border-bottom: 0; border-left: 14px solid transparent; }
   .stats-footer { flex-direction: column; gap: 8px; }
+}
+
+/* The venue display is a tall 1080px-class monitor; keep the full dashboard in one view. */
+@media (min-width: 721px) and (max-width: 1200px) and (min-height: 1600px) {
+  body { height: 100vh; overflow: hidden; }
+  .stats-header { padding: 22px 30px 18px; }
+  .event-label { font-size: .72rem; }
+  .event-catch { margin-top: 4px; font-size: .85rem; }
+  .stats-header h1 { margin: 12px 0 6px; font-size: 2.25rem; }
+  .live-label { font-size: .72rem; }
+  main { padding: 18px 30px 20px; }
+  .overview { padding: 14px 0 16px; gap: 18px; }
+  .overview-copy { margin-top: 6px; font-size: .9rem; }
+  .total-count { font-size: 4rem; }
+  .updated-at { margin-top: 6px; font-size: .7rem; }
+  .diagnosis-prompt { grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; margin-top: 16px; padding: 20px 24px; }
+  .diagnosis-prompt h2 { margin-top: 6px; font-size: 2.75rem; }
+  .diagnosis-prompt .section-kicker::before { font-size: 1.15rem; }
+  .diagnosis-prompt-copy > p:not(.section-kicker) { margin-top: 7px; }
+  .diagnosis-prompt-gift { padding: 12px 14px; border-left-width: 5px; font-size: 1.15rem; line-height: 1.45 !important; }
+  .diagnosis-prompt-note { font-size: .9rem; }
+  .diagnosis-prompt-qr { padding: 10px; }
+  .diagnosis-prompt-qr img { width: 240px; }
+  .stats-section { padding: 20px 0; }
+  .section-heading { margin-bottom: 12px; }
+  .section-heading h2 { font-size: 1.5rem; }
+  .type-layout { grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 24px; }
+  .donut-chart { width: min(25vw, 250px); }
+  .type-legend { gap: 8px; }
+  .type-item { min-height: 54px; gap: 8px; padding: 5px 8px; }
+  .type-item img { width: 36px; height: 44px; }
+  .type-item h3 { font-size: .75rem; }
+  .type-item p { margin-top: 3px; font-size: .7rem; }
+  .axis-grid { gap: 12px; }
+  .axis-card { padding: 14px 10px 12px; }
+  .axis-card h3 { margin-bottom: 10px; font-size: .85rem; }
+  .axis-chart { width: min(18vw, 120px); }
+  .axis-values { margin-top: 10px; font-size: .85rem; }
+  .stats-status { margin: 12px 0 0; font-size: .72rem; }
+  .stats-footer { gap: 10px; padding: 10px 24px 14px; font-size: .65rem; }
+  .stats-footer img { width: 100px; }
 }
