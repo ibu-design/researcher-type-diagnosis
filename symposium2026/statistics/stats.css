@@ -49,14 +49,15 @@ h2 { margin: 8px 0 0; font-size: clamp(1.35rem, 3vw, 2rem); }
 .total-unit { margin-left: 6px; font-size: 1.1rem; font-weight: 700; }
 .updated-at { margin: 12px 0 0; color: var(--muted); font-size: .8rem; }
 
-.diagnosis-prompt { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 270px); align-items: center; gap: clamp(24px, 5vw, 64px); margin-top: 30px; padding: clamp(24px, 4vw, 42px); background: #e5f0ec; border: 1px solid #b7d0c8; }
-.diagnosis-prompt h2 { margin-top: 8px; }
+.diagnosis-prompt { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 330px); align-items: center; gap: clamp(24px, 5vw, 64px); margin-top: 30px; padding: clamp(28px, 5vw, 56px); background: #e5f0ec; border: 1px solid #b7d0c8; }
+.diagnosis-prompt h2 { margin-top: 14px; font-size: clamp(3.6rem, 8vw, 6.5rem); line-height: 1.15; }
 .diagnosis-prompt-copy > p:not(.section-kicker) { margin: 12px 0 0; color: var(--muted); line-height: 1.8; }
-.diagnosis-prompt-gift { padding: 14px 16px; border-left: 5px solid #d6a840; background: #fff8df; color: var(--ink) !important; }
-.diagnosis-prompt-note { color: #9a5a35 !important; font-size: .82rem; font-weight: 700; }
-.diagnosis-prompt-qr { display: grid; justify-items: center; gap: 10px; padding: 14px; background: var(--paper); border: 1px solid var(--line); color: var(--ink); font-weight: 700; text-align: center; text-decoration: none; }
-.diagnosis-prompt-qr:hover { border-color: var(--accent); }
-.diagnosis-prompt-qr img { display: block; width: min(100%, 240px); height: auto; background: #fff; }
+.diagnosis-prompt-copy > p:not(.section-kicker):not(.diagnosis-prompt-gift):not(.diagnosis-prompt-note) { display: none; }
+.diagnosis-prompt-gift { padding: 18px 20px; border-left: 7px solid #d6a840; background: #fff8df; color: var(--ink) !important; font-size: clamp(1.35rem, 2.6vw, 2.2rem); line-height: 1.6 !important; }
+.diagnosis-prompt-note { color: #9a5a35 !important; font-size: clamp(1rem, 1.8vw, 1.35rem); font-weight: 700; }
+.diagnosis-prompt-qr { display: grid; place-items: center; padding: 14px; background: var(--paper); border: 1px solid var(--line); pointer-events: none; }
+.diagnosis-prompt-qr span { display: none; }
+.diagnosis-prompt-qr img { display: block; width: min(100%, 300px); height: auto; background: #fff; }
 
 .stats-section { padding: 34px 0; border-bottom: 1px solid var(--line); }
 .section-heading { margin-bottom: 22px; }
